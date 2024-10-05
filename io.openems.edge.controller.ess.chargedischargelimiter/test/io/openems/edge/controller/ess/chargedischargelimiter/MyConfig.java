@@ -87,6 +87,12 @@ public class MyConfig extends AbstractComponentConfig implements Config {
 		return 0;
 	}
 
+	@Override
+	public boolean debugMode() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 //	@Override
 //	public String setting0() {
 //		return this.builder.setting0;

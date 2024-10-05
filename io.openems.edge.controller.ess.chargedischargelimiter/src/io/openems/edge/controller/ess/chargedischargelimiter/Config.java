@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 @ObjectClassDefinition(//
 		name = "Controller ESS Charge Discharge Limiter", //
-		description = "Limits total charge and discharge for an Ess.")
+		description = "Limits total charge and discharge for an Ess. Sets ESS into balancing mode after a configured amount of charged energy")
 @interface Config {
 
 	@AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
@@ -43,6 +43,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	
 	@AttributeDefinition(name = "Balancing hysteresis [s]", description = "Time for balancing out battery cells. 1 hour as default")
 	int balancingHysteresis() default 3600;	// 1hour. Depends on battery´s capacity?? Maybe it should be calculated dynamically
+	
+	@AttributeDefinition(name = "Debug Mode", description = "Extends debugging")
+	boolean debugMode() default true;		
 
 	/* what´s the use?
 	@AttributeDefinition(name = "Force-Discharge SoC [%]", description = "Discharging is forced while State of Charge is above Force-Discharge-SoC.")

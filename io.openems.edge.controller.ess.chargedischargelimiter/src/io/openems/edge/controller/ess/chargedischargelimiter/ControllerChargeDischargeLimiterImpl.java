@@ -2,7 +2,6 @@ package io.openems.edge.controller.ess.chargedischargelimiter;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -54,9 +53,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private Instant lastStateChangeTime = Instant.MIN;
 	private Instant balancingStartTime = Instant.MIN;
 
-	private String essId;
 	private int minSoc = 0;
-	
+
 	private int maxSoc = 0;
 	private int forceChargeSoc = 0;
 	private int forceChargePower = 0;
@@ -87,7 +85,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 		this.config = config;
 		try {
-			ManagedSymmetricEss ess = this.componentManager.getComponent(config.ess_id());
+			this.ess = this.componentManager.getComponent(config.ess_id());
 			this.minSoc = this.config.minSoc(); // min SoC
 			this.maxSoc = this.config.minSoc();
 			this.forceChargeSoc = this.config.forceChargeSoc(); // if battery need balancing we charge to this value
@@ -110,20 +108,31 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	public void run() throws OpenemsNamedException {
 // method stub		
 		// Remember: Negative values for Charge; positive for Discharge
-		this.calculatedPower = null;  // No constraints
+		this.logDebug(this.log, "\nCurrent State " + this.state.getName());
+		this.calculatedPower = null; // No constraints
 		switch (this.state) {
 		case UNDEFINED:
 			// check if we can change to normal operation, i.e. if SOC and activePower
 			// values are available
 			if (ess.getSoc().get() != null && ess.getActivePower().get() != null) {
-				this.changeState(state.NORMAL);
+				this.changeState(State.NORMAL);
 			}
 			break;
 		case NORMAL:
-			// check if SOC is in normal limits
+
 			// check if charge energy is below the next balancing cycle
 			if (shouldBalance()) {
-				this.changeState(state.BALANCING_WANTED);
+				this.changeState(State.BALANCING_WANTED);
+				break;
+			}
+			// check if SOC is in normal limits
+			if (this.ess.getSoc().get() > this.maxSoc) {
+				this.changeState(State.ABOVE_MAX_SOC);
+				break;
+			}
+			if (this.ess.getSoc().get() <= this.minSoc) {
+				this.changeState(State.BELOW_MIN_SOC);
+				break;
 			}
 			break;
 		case ERROR:
@@ -132,51 +141,70 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		case BELOW_MIN_SOC:
 			// block discharging
 			this.calculatedPower = 0; // block further discharging
+
+			if (this.ess.getSoc().get() >= this.minSoc) {
+				this.changeState(State.NORMAL);
+			}
 			break;
 		case ABOVE_MAX_SOC:
+
 			// block charging
 			this.calculatedPower = 0; // block further charging
+			if (this.ess.getSoc().get() <= this.maxSoc) {
+				this.changeState(State.NORMAL);
+			}
 			break;
 		case FORCE_CHARGE_ACTIVE:
 			// force charge with forceChargePower
 			// Charge battery with desired power
 			// Check wether it has reached desired SOC
-			
-			
-			if (ess.getSoc() != null && ess.getSoc().get() > this.forceChargeSoc) { // desired SOC reached, stop charging 
-				this.changeState(state.BALANCING_ACTIVE);
+
+			if (ess.getSoc() != null && ess.getSoc().get() > this.forceChargeSoc) { // desired SOC reached, stop
+																					// charging
+				this.changeState(State.BALANCING_ACTIVE);
 			} else {
 				this.calculatedPower = this.forceChargePower * -1; // Charging has a negative value
 			}
 			break;
 		case BALANCING_WANTED:
 			// State can be used to check things. Don´t know what, yet ;o)
-			this.changeState(state.FORCE_CHARGE_ACTIVE);
+			this.changeState(State.FORCE_CHARGE_ACTIVE);
 			break;
 		case BALANCING_ACTIVE:
 			// Start Timer
-            if (balancingStartTime.equals(Instant.MIN)) {
-                // Start the balancing timer
-                balancingStartTime = Instant.now(this.componentManager.getClock());
-                this.log.info("Balancing started at " + balancingStartTime);
-            }
-            
-            // Check if balancing duration has passed
-            if (Duration.between(balancingStartTime, Instant.now(this.componentManager.getClock())).getSeconds()
-                    >= this.balancingHysteresisTime) {
-                // Balancing time is over, transition to NORMAL state
-                this.changeState(state.NORMAL);
-                balancingStartTime = Instant.MIN; // Reset the balancing start time
-            } else {
-                // Keep balancing (e.g., maintain charging at a specific rate)
-                this.calculatedPower = this.forceChargePower; // Continue charging during balancing
-            }            
-			
-			
-			// check hysteresis
-			// block discharging
-			// Keep battery SOC above desired level. Assume battery is discharging
+			if (balancingStartTime.equals(Instant.MIN)) {
+				// Start the balancing timer
+				balancingStartTime = Instant.now(this.componentManager.getClock());
+				this.log.info("Balancing started at " + balancingStartTime);
+			}
+			this.logDebug(this.log, "\nBalancing active since " + this.balancingStartTime);
+			// Check if balancing duration has passed
+			if (Duration.between(balancingStartTime, Instant.now(this.componentManager.getClock()))
+					.getSeconds() >= this.balancingHysteresisTime) {
+				// Balancing time is over, transition to NORMAL state
+				this.logDebug(this.log, "\nBalancing finished. Going back to normal operation  ");
+				this.changeState(State.NORMAL);
+				this._setActiveChargeEnergy(0); // Reset charged energy
+				balancingStartTime = Instant.MIN; // Reset the balancing start time
+				break;
+			}
+
+			// Keep battery SOC above desired level. Assume battery is self-discharging
 			// constantly
+			if (ess.getSoc() != null && ess.getSoc().get() < (this.forceChargeSoc) + 1) {
+				/* SOC is below desired value + 1%, start charging again */
+				this.calculatedPower = this.forceChargePower * -1; // Charging has a negative value
+			}
+
+			/* SOC is below desired value, reset Timer, start charging again */
+			if (ess.getSoc() != null && ess.getSoc().get() < (this.forceChargeSoc)) {
+
+				this.logDebug(this.log, "\nSoC is below " + this.forceChargeSoc + "%. Stop Balancing");
+				this.changeState(State.BALANCING_WANTED);
+				break;
+			}
+			this.calculatedPower = 0; // block further discharging
+
 			break;
 
 		}
@@ -193,23 +221,40 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * @return if battery should be balanced
 	 */
 	private boolean shouldBalance() {
+		this.logDebug(this.log, "\nCharged " + this.getActiveChargeEnergy().get() + " since last balancing cycle");
+		if (this.state == State.BALANCING_ACTIVE) {
+			return false; // early return
+		}
+		if (this.getActiveChargeEnergy().get() > this.energyBetweenBalancingCycles) {
+			return true;
+		}
 		return false;
 	}
 
+	/**
+	 * Applies constraints to ess. Even FORCE_CHARGE is a constraint as the ESS is
+	 * allowed to charge more than this controller´s desired value.
+	 * 
+	 * 
+	 * @param calculatedPower
+	 */
 	void applyActivePower(Integer calculatedPower) {
 		if (calculatedPower == null) {
 			// early return if no constrains have to be set
 			return;
 		}
 
-
 		try {
 			// adjust value so that it fits into Min/MaxActivePower
-			if (this.state == this.state.BELOW_MIN_SOC ) {  // block further discharging
+			if (this.state == State.BELOW_MIN_SOC) { // block further discharging
 				ess.setActivePowerLessOrEquals(calculatedPower);
-			} else if (this.state == this.state.ABOVE_MAX_SOC ) { // block further charging 
+			} else if (this.state == State.ABOVE_MAX_SOC) { // block further charging
 				ess.setActivePowerGreaterOrEquals(calculatedPower);
-			} else if (this.state == this.state.FORCE_CHARGE_ACTIVE ) { // force charging
+			} else if (this.state == State.FORCE_CHARGE_ACTIVE) { // force charging
+				calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
+						calculatedPower);
+				ess.setActivePowerLessOrEquals(calculatedPower);
+			} else if (this.state == State.BALANCING_ACTIVE) { //
 				calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
 						calculatedPower);
 				ess.setActivePowerLessOrEquals(calculatedPower);
@@ -250,6 +295,13 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		return this.timedata;
 	}
 
+	/**
+	 * Calculates charge energy from power. Positive values (discharging) are
+	 * ignored.
+	 *
+	 * @param nextState the target state
+	 * @return whether the state was changed
+	 */
 	private void calculateEnergy() {
 		// Calculate Energy
 		Integer activePower = this.ess.getActivePower().get();
@@ -260,8 +312,20 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			// ToDo: Log Error
 		} else if (activePower < 0) {
 			this.calculateChargeEnergy.update(activePower * -1);
+		} else {
+			this.calculateChargeEnergy.update(0);
 		}
 
+	}
+
+	/**
+	 * Uses Info Log for further debug features.
+	 */
+	@Override
+	protected void logDebug(Logger log, String message) {
+		if (this.config.debugMode()) {
+			this.logInfo(this.log, message);
+		}
 	}
 
 }

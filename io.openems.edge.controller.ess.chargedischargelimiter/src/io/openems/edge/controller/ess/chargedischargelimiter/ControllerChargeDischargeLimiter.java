@@ -1,7 +1,7 @@
 package io.openems.edge.controller.ess.chargedischargelimiter;
 
 import static io.openems.common.channel.PersistencePriority.HIGH;
-import static io.openems.common.channel.PersistencePriority.LOW;
+
 
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
@@ -15,190 +15,196 @@ import io.openems.edge.controller.api.Controller;
 
 public interface ControllerChargeDischargeLimiter extends Controller, OpenemsComponent {
 
-public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-STATE_MACHINE(Doc.of(State.values()) //
-.text("Current State of State-Machine")), //
-AWAITING_HYSTERESIS(Doc.of(Level.INFO) //
-.text("Would change State, but hysteresis is active")),
-/**
-* Holds the minimum SoC value configured.
-*/
-FORCE_CHARGE_POWER(Doc.of(OpenemsType.INTEGER) //
-.unit(Unit.WATT).persistencePriority(HIGH)),   // Priority high for testing
-BALANCING_SOC(Doc.of(OpenemsType.INTEGER) //
+	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+		STATE_MACHINE(Doc.of(State.values()) //
+				.text("Current State of State-Machine")), //
+		AWAITING_HYSTERESIS(Doc.of(Level.INFO) //
+				.text("Would change State, but hysteresis is active")),
+		/**
+		 * Holds the minimum SoC value configured.
+		 */
+		FORCE_CHARGE_POWER(Doc.of(OpenemsType.INTEGER) //
+				.unit(Unit.WATT).persistencePriority(HIGH)), // Priority high for testing
+		BALANCING_SOC(Doc.of(OpenemsType.INTEGER) //
 
-.unit(Unit.PERCENT).persistencePriority(HIGH)), //
-ACTIVE_CHARGE_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
+				.unit(Unit.PERCENT).persistencePriority(HIGH)), //
+		ACTIVE_CHARGE_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
 
-.unit(Unit.KILOWATT_HOURS).persistencePriority(HIGH)), // 
-MIN_SOC(Doc.of(OpenemsType.INTEGER) //
-.unit(Unit.PERCENT)), //
-MAX_SOC(Doc.of(OpenemsType.INTEGER) //
-.unit(Unit.PERCENT)); //
+				.unit(Unit.KILOWATT_HOURS).persistencePriority(HIGH)), //
+		MIN_SOC(Doc.of(OpenemsType.INTEGER) //
+				.unit(Unit.PERCENT)), //
+		MAX_SOC(Doc.of(OpenemsType.INTEGER) //
+				.unit(Unit.PERCENT)); //
 
-private final Doc doc;
+		private final Doc doc;
 
-private ChannelId(Doc doc) {
-this.doc = doc;
-}
+		private ChannelId(Doc doc) {
+			this.doc = doc;
+		}
 
-@Override
-public Doc doc() {
-return this.doc;
-}
-}
+		@Override
+		public Doc doc() {
+			return this.doc;
+		}
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#AWAITING_HYSTERESIS}.
-*
-* @return the Channel
-*/
-public default StateChannel getAwaitingHysteresisChannel() {
-return this.channel(ChannelId.AWAITING_HYSTERESIS);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#AWAITING_HYSTERESIS}.
+	 *
+	 * @return the Channel
+	 */
+	public default StateChannel getAwaitingHysteresisChannel() {
+		return this.channel(ChannelId.AWAITING_HYSTERESIS);
+	}
 
-/**
-* Internal method to set the 'nextValue' on
-* {@link ChannelId#AWAITING_HYSTERESIS} Channel.
-*
-* @param value the next value
-*/
-public default void _setAwaitingHysteresisValue(boolean value) {
-this.getAwaitingHysteresisChannel().setNextValue(value);
-}
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#AWAITING_HYSTERESIS} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setAwaitingHysteresisValue(boolean value) {
+		this.getAwaitingHysteresisChannel().setNextValue(value);
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#MIN_SOC}.
-*
-* @return the Channel
-*/
-public default IntegerReadChannel getMinSocChannel() {
-return this.channel(ChannelId.MIN_SOC);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#MIN_SOC}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getMinSocChannel() {
+		return this.channel(ChannelId.MIN_SOC);
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#MAX_SOC}.
-*
-* @return the Channel
-*/
-public default IntegerReadChannel getMaxSocChannel() {
-return this.channel(ChannelId.MAX_SOC);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#MAX_SOC}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getMaxSocChannel() {
+		return this.channel(ChannelId.MAX_SOC);
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
-*
-* @return the Channel
-*/
-public default IntegerReadChannel getActiveChargeEnergyChannel() {
-return this.channel(ChannelId.ACTIVE_CHARGE_ENERGY);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getActiveChargeEnergyChannel() {
+		return this.channel(ChannelId.ACTIVE_CHARGE_ENERGY);
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#FORCE_CHARGE_POWER}.
-*
-* @return the Channel
-*/
-public default IntegerReadChannel getForceChargePowerChannel() {
-return this.channel(ChannelId.FORCE_CHARGE_POWER);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#FORCE_CHARGE_POWER}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getForceChargePowerChannel() {
+		return this.channel(ChannelId.FORCE_CHARGE_POWER);
+	}
 
-/**
-* Gets the Channel for {@link ChannelId#FORCE_CHARGE_POWER}.
-*
-* @return the Channel
-*/
-public default IntegerReadChannel getBalancingSocChannel() {
-return this.channel(ChannelId.BALANCING_SOC);
-}
-/**
-* Internal method to set the 'nextValue' on {@link ChannelId#MIN_SOC} Channel.
-*
-* @param value the next value
-*/
-public default void _setMinSoc(Integer value) {
-this.getMinSocChannel().setNextValue(value);
-}
+	/**
+	 * Gets the Channel for {@link ChannelId#FORCE_CHARGE_POWER}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getBalancingSocChannel() {
+		return this.channel(ChannelId.BALANCING_SOC);
+	}
 
-/**
-* Gets the minimum SoC value configured. See {@link ChannelId#MIN_SOC}.
-*
-* @return the Channel {@link Value}
-*/
-public default Value<Integer> getMinSoc() {
-return this.getMinSocChannel().value();
-}
+	/**
+	 * Internal method to set the 'nextValue' on {@link ChannelId#MIN_SOC} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setMinSoc(Integer value) {
+		this.getMinSocChannel().setNextValue(value);
+	}
 
-/**
-* Internal method to set the 'nextValue' on {@link ChannelId#MAX_SOC} Channel.
-*
-* @param value the next value
-*/
-public default void _setMaxSoc(Integer value) {
-this.getMaxSocChannel().setNextValue(value);
-}
+	/**
+	 * Gets the minimum SoC value configured. See {@link ChannelId#MIN_SOC}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getMinSoc() {
+		return this.getMinSocChannel().value();
+	}
 
-/**
-* Gets the maximum SoC value configured. See {@link ChannelId#MAX_SOC}.
-*
-* @return the Channel {@link Value}
-*/
-public default Value<Integer> getMaxSoc() {
-return this.getMaxSocChannel().value();
-}
+	/**
+	 * Internal method to set the 'nextValue' on {@link ChannelId#MAX_SOC} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setMaxSoc(Integer value) {
+		this.getMaxSocChannel().setNextValue(value);
+	}
 
-/**
-* Internal method to set the 'nextValue' on {@link ChannelId#ACTIVE_CHARGE_ENERGY} Channel.
-*
-* @param value the next value
-*/
-public default void _setActiveChargeEnergy(Integer value) {
-this.getActiveChargeEnergyChannel().setNextValue(value);
-}
+	/**
+	 * Gets the maximum SoC value configured. See {@link ChannelId#MAX_SOC}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getMaxSoc() {
+		return this.getMaxSocChannel().value();
+	}
 
-/**
-* Gets the maximum SoC value configured. See {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
-*
-* @return the Channel {@link Value}
-*/
-public default Value<Integer> getActiveChargeEnergy() {
-return this.getActiveChargeEnergyChannel().value();
-}
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#ACTIVE_CHARGE_ENERGY} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setActiveChargeEnergy(Integer value) {
+		this.getActiveChargeEnergyChannel().setNextValue(value);
+	}
 
-/**
-* Internal method to set the 'nextValue' on {@link ChannelId#FORCE_CHARGE_POWER} Channel.
-*
-* @param value the next value
-*/
-public default void _setForceChargePower(Integer value) {
-this.getForceChargePowerChannel().setNextValue(value);
-}
+	/**
+	 * Gets the maximum SoC value configured. See
+	 * {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getActiveChargeEnergy() {
+		return this.getActiveChargeEnergyChannel().value();
+	}
 
-/**
-* Gets the maximum SoC value configured. See {@link ChannelId#FORCE_CHARGE_POWER}.
-*
-* @return the Channel {@link Value}
-*/
-public default Value<Integer> getForceChargePower() {
-return this.getForceChargePowerChannel().value();
-}
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#FORCE_CHARGE_POWER} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setForceChargePower(Integer value) {
+		this.getForceChargePowerChannel().setNextValue(value);
+	}
 
-/**
-* Internal method to set the 'nextValue' on {@link ChannelId#BALANCING_SOC} Channel.
-*
-* @param value the next value
-*/
-public default void _setBalancingSoc(Integer value) {
-this.getBalancingSocChannel().setNextValue(value);
-}
+	/**
+	 * Gets the maximum SoC value configured. See
+	 * {@link ChannelId#FORCE_CHARGE_POWER}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getForceChargePower() {
+		return this.getForceChargePowerChannel().value();
+	}
 
-/**
-* Gets the maximum SoC value configured. See {@link ChannelId#BALANCING_SOC}.
-*
-* @return the Channel {@link Value}
-*/
-public default Value<Integer> getBalancingSoc() {
-return this.getBalancingSocChannel().value();
-}
+	/**
+	 * Internal method to set the 'nextValue' on {@link ChannelId#BALANCING_SOC}
+	 * Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setBalancingSoc(Integer value) {
+		this.getBalancingSocChannel().setNextValue(value);
+	}
+
+	/**
+	 * Gets the maximum SoC value configured. See {@link ChannelId#BALANCING_SOC}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getBalancingSoc() {
+		return this.getBalancingSocChannel().value();
+	}
 
 }
