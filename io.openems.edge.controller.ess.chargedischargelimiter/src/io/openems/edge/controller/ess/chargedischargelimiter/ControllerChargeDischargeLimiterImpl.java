@@ -61,6 +61,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private int energyBetweenBalancingCycles = 0;
 	private int balancingHysteresis = 0;
 	private State state = State.UNDEFINED;
+	private Integer calculatedPower = null;
 
 	@Reference
 	private ComponentManager componentManager;
@@ -106,9 +107,12 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	@Override
 	public void run() throws OpenemsNamedException {
 // method stub		
+		// Remember: Negative values for Charge; positive for Discharge
+		this.calculatedPower = null;  // No constraints
 		switch (this.state) {
 		case UNDEFINED:
-			// check if we can change to normal operation, i.e. if SOC and activePower values are available
+			// check if we can change to normal operation, i.e. if SOC and activePower
+			// values are available
 			if (ess.getSoc().get() != null && ess.getActivePower().get() != null) {
 				this.changeState(state.NORMAL);
 			}
@@ -116,24 +120,73 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		case NORMAL:
 			// check if SOC is in normal limits
 			// check if charge energy is below the next balancing cycle
-			if ()
-			calculateEnergy();
+			if (shouldBalance()) {
+				this.changeState(state.BALANCING_WANTED);
+			}
+			break;
 		case ERROR:
 			// log errors
+			break;
 		case BELOW_MIN_SOC:
 			// block discharging
+			this.calculatedPower = 0; // block further discharging
+			break;
 		case ABOVE_MAX_SOC:
 			// block charging
+			this.calculatedPower = 0; // block further charging
+			break;
 		case FORCE_CHARGE_ACTIVE:
 			// force charge with forceChargePower
+			// Charge battery with desired power
+			// Check wether it has reached desired SOC
+			break;
 		case BALANCING_WANTED:
-			// force charge with forceChargePower 
+			// State can be used to check things. Don´t know what, yet ;o)
+			this.changeState(state.FORCE_CHARGE_ACTIVE);
+			break;
 		case BALANCING_ACTIVE:
 			// check hysteresis
 			// block discharging
+			// Keep battery SOC above desired level. Assume battery is discharging
+			// constantly
+			break;
 
 		}
+		this.applyActivePower(calculatedPower);
+		this.calculateEnergy();
 
+	}
+
+	/**
+	 * Calculates if the battery needs too be balanced. This depends on charged
+	 * energy since the last balancing procedure. If charged energy exceeds
+	 * configured energy method returns true
+	 * 
+	 * @return if battery should be balanced
+	 */
+	private boolean shouldBalance() {
+		return false;
+	}
+
+	void applyActivePower(Integer calculatedPower) {
+		if (calculatedPower == null) {
+			// early return if no constrains have to be set
+			return;
+		}
+
+		calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
+				calculatedPower);
+		try {
+			// adjust value so that it fits into Min/MaxActivePower
+			if (calculatedPower <= 0) {  // block further discharging
+				ess.setActivePowerLessOrEquals(calculatedPower);
+			} else { // block further charging 
+				ess.setActivePowerGreaterOrEquals(calculatedPower);
+			}
+		} catch (OpenemsNamedException e) {
+			// ToDo catch exception. Add logging
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -173,6 +226,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		if (activePower == null) {
 			// Not available
 			this.calculateChargeEnergy.update(null);
+			// ToDo: Log Error
 		} else if (activePower < 0) {
 			this.calculateChargeEnergy.update(activePower * -1);
 		}

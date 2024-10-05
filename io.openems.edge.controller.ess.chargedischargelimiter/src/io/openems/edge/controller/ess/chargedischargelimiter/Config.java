@@ -42,7 +42,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	int forceChargePower() default 500;	
 	
 	@AttributeDefinition(name = "Balancing hysteresis [s]", description = "Time for balancing out battery cells. 1 hour as default")
-	int balancingHysteresis() default 3600;	// 1hour
+	int balancingHysteresis() default 3600;	// 1hour. Depends on battery´s capacity?? Maybe it should be calculated dynamically
 
 	/* what´s the use?
 	@AttributeDefinition(name = "Force-Discharge SoC [%]", description = "Discharging is forced while State of Charge is above Force-Discharge-SoC.")
