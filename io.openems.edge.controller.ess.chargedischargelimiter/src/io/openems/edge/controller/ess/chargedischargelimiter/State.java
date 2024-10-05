@@ -8,7 +8,7 @@ public enum State implements OptionsEnum {
 	ERROR(1, "Error State"), //
 	BELOW_MIN_SOC(2, "Min-SoC"), //
 	ABOVE_MAX_SOC(3, "Max-SoC"), //
-	FORCE_CHARGE_ACTIVE(4, "Force-Charge-SoC"), // ESS is charging to configured balancing point
+	FORCE_CHARGE_ACTIVE(4, "Force-Charge-to-SoC"), // ESS is charging to configured balancing point
 	BALANCING_WANTED(5, "Balancing wanted"),
 	BALANCING_ACTIVE(6, "Balancing active");
 

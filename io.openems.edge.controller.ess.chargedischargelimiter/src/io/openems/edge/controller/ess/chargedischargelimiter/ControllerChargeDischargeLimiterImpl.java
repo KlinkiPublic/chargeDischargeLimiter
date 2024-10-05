@@ -49,7 +49,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * Length of hysteresis in minutes. States are not changed quicker than this.
 	 * 
 	 */
-	private static final int HYSTERESIS = 10; // seconds
+	private static final int HYSTERESIS = 30; // seconds
 	private Instant lastStateChangeTime = Instant.MIN;
 	private Instant balancingStartTime = Instant.MIN;
 
@@ -62,6 +62,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private int balancingHysteresisTime = 0;
 	private State state = State.UNDEFINED;
 	private Integer calculatedPower = null;
+	private boolean balancingWanted = false;
 
 	@Reference
 	private ComponentManager componentManager;
@@ -87,11 +88,16 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		try {
 			this.ess = this.componentManager.getComponent(config.ess_id());
 			this.minSoc = this.config.minSoc(); // min SoC
-			this.maxSoc = this.config.minSoc();
+			this.maxSoc = this.config.maxSoc();
 			this.forceChargeSoc = this.config.forceChargeSoc(); // if battery need balancing we charge to this value
 			this.forceChargePower = this.config.forceChargePower(); // if battery need balancing we charge to this value
 			this.energyBetweenBalancingCycles = this.config.energyBetweenBalancingCycles();
 			this.balancingHysteresisTime = this.config.balancingHysteresis();
+			
+			if (config.energyBetweenBalancingCycles() > 0) {
+				this.balancingWanted = true;
+			}
+			
 		} catch (OpenemsNamedException e) {
 
 			e.printStackTrace();
@@ -108,10 +114,18 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	public void run() throws OpenemsNamedException {
 // method stub		
 		// Remember: Negative values for Charge; positive for Discharge
-		this.logDebug(this.log, "\nCurrent State " + this.state.getName());
+		this.logDebug(this.log, "\nCurrent State " + this.state.getName()  + "\n" 
+				+ "Current SoC " + this.ess.getSoc().get()  + "% \n"
+				+ "Current ActivePower " + this.ess.getActivePower().get()  + "W \n"
+				+ "Energy charged since last balancing " + this.getActiveChargeEnergy().get()  + "kWh \n"
+				);
 		this.calculatedPower = null; // No constraints
 		switch (this.state) {
 		case UNDEFINED:
+			if (this.ess == null) {
+				this.logDebug(this.log, "ERROR. ESS " + config.ess_id() + " unavailable ");
+				return;
+			}
 			// check if we can change to normal operation, i.e. if SOC and activePower
 			// values are available
 			if (ess.getSoc().get() != null && ess.getActivePower().get() != null) {
@@ -120,8 +134,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			break;
 		case NORMAL:
 
-			// check if charge energy is below the next balancing cycle
-			if (shouldBalance()) {
+			// check if charge energy is below the next balancing cycle. Only balance if this is desired
+			if (shouldBalance() && this.balancingWanted) {
 				this.changeState(State.BALANCING_WANTED);
 				break;
 			}
@@ -221,8 +235,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * @return if battery should be balanced
 	 */
 	private boolean shouldBalance() {
-		this.logDebug(this.log, "\nCharged " + this.getActiveChargeEnergy().get() + " since last balancing cycle");
-		if (this.state == State.BALANCING_ACTIVE) {
+		// this.logDebug(this.log, "\nCharged " + this.getActiveChargeEnergy().get() + " since last balancing cycle");
+		if (this.state == State.BALANCING_ACTIVE || this.getActiveChargeEnergy().get() == null) {
 			return false; // early return
 		}
 		if (this.getActiveChargeEnergy().get() > this.energyBetweenBalancingCycles) {
@@ -279,7 +293,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		if (Duration.between(//
 				this.lastStateChangeTime, //
 				Instant.now(this.componentManager.getClock()) //
-		).toMinutes() >= HYSTERESIS) {
+		).toSeconds() >= HYSTERESIS) {
 			this.state = nextState;
 			this.lastStateChangeTime = Instant.now(this.componentManager.getClock());
 			this._setAwaitingHysteresisValue(false);

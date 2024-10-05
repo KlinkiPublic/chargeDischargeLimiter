@@ -9,7 +9,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 @interface Config {
 
 	@AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
-	String id() default "ctrl.ChargeDischargelimiter0";
+	String id() default "chargeDischargeLimiter0";
 
 	@AttributeDefinition(name = "Alias", description = "Human-readable name of this Component; defaults to Component-ID")
 	String alias() default "";
@@ -29,7 +29,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	@AttributeDefinition(name = "Force-Charge SoC [%]", description = "Charging is forced while State of Charge is below Force-Charge-SoC.")
 	int forceChargeSoc() default 95;
 	
-	@AttributeDefinition(name = "Charge energy between balancing [kWh]", description = "Charged energy to the next balancing cycle")
+	@AttributeDefinition(name = "Charge energy between balancing [kWh]", description = "Charged energy to the next balancing cycle. Set to 0 if balancing is not desired")
 	int energyBetweenBalancingCycles() default 100;	
 
 	/*  good idea, we keep that in mind. for the first approach we use a default value 
@@ -38,7 +38,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	int forceChargePower();
 	*/
 	
-	@AttributeDefinition(name = "Force-Charge Power [W]", description = "The charge power during force-charging.")
+	@AttributeDefinition(name = "Force-Charge Power [W]", description = "The charge power during force-charging. Attention! Includes charging from grid")
 	int forceChargePower() default 500;	
 	
 	@AttributeDefinition(name = "Balancing hysteresis [s]", description = "Time for balancing out battery cells. 1 hour as default")
@@ -46,6 +46,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	
 	@AttributeDefinition(name = "Debug Mode", description = "Extends debugging")
 	boolean debugMode() default true;		
+
 
 	/* what´s the use?
 	@AttributeDefinition(name = "Force-Discharge SoC [%]", description = "Discharging is forced while State of Charge is above Force-Discharge-SoC.")
