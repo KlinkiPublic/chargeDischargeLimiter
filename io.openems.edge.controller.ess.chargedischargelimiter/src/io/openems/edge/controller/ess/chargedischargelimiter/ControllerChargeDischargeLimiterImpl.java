@@ -51,15 +51,17 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * 
 	 */
 	private static final int HYSTERESIS = 10; // seconds
-	private Instant lastStateChange = Instant.MIN;
+	private Instant lastStateChangeTime = Instant.MIN;
+	private Instant balancingStartTime = Instant.MIN;
 
 	private String essId;
 	private int minSoc = 0;
+	
 	private int maxSoc = 0;
 	private int forceChargeSoc = 0;
 	private int forceChargePower = 0;
 	private int energyBetweenBalancingCycles = 0;
-	private int balancingHysteresis = 0;
+	private int balancingHysteresisTime = 0;
 	private State state = State.UNDEFINED;
 	private Integer calculatedPower = null;
 
@@ -91,7 +93,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			this.forceChargeSoc = this.config.forceChargeSoc(); // if battery need balancing we charge to this value
 			this.forceChargePower = this.config.forceChargePower(); // if battery need balancing we charge to this value
 			this.energyBetweenBalancingCycles = this.config.energyBetweenBalancingCycles();
-			this.balancingHysteresis = this.config.balancingHysteresis();
+			this.balancingHysteresisTime = this.config.balancingHysteresis();
 		} catch (OpenemsNamedException e) {
 
 			e.printStackTrace();
@@ -139,12 +141,38 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			// force charge with forceChargePower
 			// Charge battery with desired power
 			// Check wether it has reached desired SOC
+			
+			
+			if (ess.getSoc() != null && ess.getSoc().get() > this.forceChargeSoc) { // desired SOC reached, stop charging 
+				this.changeState(state.BALANCING_ACTIVE);
+			} else {
+				this.calculatedPower = this.forceChargePower * -1; // Charging has a negative value
+			}
 			break;
 		case BALANCING_WANTED:
 			// State can be used to check things. Don´t know what, yet ;o)
 			this.changeState(state.FORCE_CHARGE_ACTIVE);
 			break;
 		case BALANCING_ACTIVE:
+			// Start Timer
+            if (balancingStartTime.equals(Instant.MIN)) {
+                // Start the balancing timer
+                balancingStartTime = Instant.now(this.componentManager.getClock());
+                this.log.info("Balancing started at " + balancingStartTime);
+            }
+            
+            // Check if balancing duration has passed
+            if (Duration.between(balancingStartTime, Instant.now(this.componentManager.getClock())).getSeconds()
+                    >= this.balancingHysteresisTime) {
+                // Balancing time is over, transition to NORMAL state
+                this.changeState(state.NORMAL);
+                balancingStartTime = Instant.MIN; // Reset the balancing start time
+            } else {
+                // Keep balancing (e.g., maintain charging at a specific rate)
+                this.calculatedPower = this.forceChargePower; // Continue charging during balancing
+            }            
+			
+			
 			// check hysteresis
 			// block discharging
 			// Keep battery SOC above desired level. Assume battery is discharging
@@ -174,14 +202,17 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			return;
 		}
 
-		calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
-				calculatedPower);
+
 		try {
 			// adjust value so that it fits into Min/MaxActivePower
-			if (calculatedPower <= 0) {  // block further discharging
+			if (this.state == this.state.BELOW_MIN_SOC ) {  // block further discharging
 				ess.setActivePowerLessOrEquals(calculatedPower);
-			} else { // block further charging 
+			} else if (this.state == this.state.ABOVE_MAX_SOC ) { // block further charging 
 				ess.setActivePowerGreaterOrEquals(calculatedPower);
+			} else if (this.state == this.state.FORCE_CHARGE_ACTIVE ) { // force charging
+				calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
+						calculatedPower);
+				ess.setActivePowerLessOrEquals(calculatedPower);
 			}
 		} catch (OpenemsNamedException e) {
 			// ToDo catch exception. Add logging
@@ -201,11 +232,11 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			return false;
 		}
 		if (Duration.between(//
-				this.lastStateChange, //
+				this.lastStateChangeTime, //
 				Instant.now(this.componentManager.getClock()) //
 		).toMinutes() >= HYSTERESIS) {
 			this.state = nextState;
-			this.lastStateChange = Instant.now(this.componentManager.getClock());
+			this.lastStateChangeTime = Instant.now(this.componentManager.getClock());
 			this._setAwaitingHysteresisValue(false);
 			return true;
 		} else {
