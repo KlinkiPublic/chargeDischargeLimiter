@@ -141,7 +141,7 @@ export class StorageComponent extends AbstractFlatWidget {
         console.log("Starte Laden der chargeDischargeLimiterComponents");
         // Get chargeDischargeLimiters
         this.chargeDischargeLimiterComponents = this.config
-            .getComponentsByFactory("Controller.Ess.chargeDischargeLimiter")
+            .getComponentsByFactory("Controller.Ess.ChargeDischargeLimiter")
             .filter(component => component.isEnabled)
             .reduce((result, component) => {
                 return {
@@ -151,6 +151,7 @@ export class StorageComponent extends AbstractFlatWidget {
             }, {});
         for (const component of Object.values(this.chargeDischargeLimiterComponents)) {
             console.log("Verarbeite chargeDischargeLimiter Component:", component);
+            console.log("Component Properties:", component.properties);
             channelAddresses.push(
                 new ChannelAddress(component.id, "_PropertyMinSoc"),
                 new ChannelAddress(component.id, "_PropertyMaxSoc"),
@@ -207,7 +208,7 @@ export class StorageComponent extends AbstractFlatWidget {
 
         for (const essId in this.prepareBatteryExtensionCtrl) {
             const controller = this.prepareBatteryExtensionCtrl[essId];
-
+            console.log(`Checking Battery Extension for essId: ${essId}`, controller);
             this.possibleBatteryExtensionMessage.set(
                 essId,
                 this.getBatteryCapacityExtensionStatus(
@@ -228,6 +229,14 @@ export class StorageComponent extends AbstractFlatWidget {
             const controller = this.emergencyReserveComponents[essId];
             controller["currentReserveSoc"] = currentData.allComponents[controller.id + "/_PropertyReserveSoc"];
             this.isEmergencyReserveEnabled[essId] = currentData.allComponents[controller.id + "/_PropertyIsReserveSocEnabled"] == 1 ? true : false;
+        }
+
+        for (const essId in this.chargeDischargeLimiterComponents) {
+            console.log("Current Data for chargeDischargeLimiter:", currentData);
+            const controller = this.chargeDischargeLimiterComponents[essId];
+            controller["minSoc"] = currentData.allComponents[controller.id + "/_PropertyMinSoc"];
+            controller["maxSoc"] = currentData.allComponents[controller.id + "/_PropertyMaxSoc"];
+            this.isChargeDischargeLimiterEnabled[essId] = currentData.allComponents[controller.id + "/_PropertyIsChargeDischargeLimiterEnabled"] == 1 ? true : false;
         }
     }
 

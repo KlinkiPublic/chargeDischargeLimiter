@@ -93,6 +93,12 @@ public class MyConfig extends AbstractComponentConfig implements Config {
 		return false;
 	}
 
+	@Override
+	public boolean isChargeDischargeLimiterEnabled() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 //	@Override
 //	public String setting0() {
 //		return this.builder.setting0;

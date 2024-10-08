@@ -47,6 +47,8 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	@AttributeDefinition(name = "Debug Mode", description = "Extends debugging")
 	boolean debugMode() default true;		
 
+	@AttributeDefinition(name = "Mode", description = "Set controller ON or OFF")
+	boolean isChargeDischargeLimiterEnabled() default true;	
 
 	/* what´s the use?
 	@AttributeDefinition(name = "Force-Discharge SoC [%]", description = "Discharging is forced while State of Charge is above Force-Discharge-SoC.")
