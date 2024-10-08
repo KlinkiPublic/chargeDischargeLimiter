@@ -19,8 +19,10 @@ export class StorageComponent extends AbstractFlatWidget {
     public storageIconStyle: string | null = null;
     public isHybridEss: boolean[] = [];
     public emergencyReserveComponents: { [essId: string]: EdgeConfig.Component } = {};
+    public chargeDischargeLimiterComponents: { [essId: string]: EdgeConfig.Component } = {};
     public currentSoc: number[] = [];
     public isEmergencyReserveEnabled: boolean[] = [];
+    public isChargeDischargeLimiterEnabled: boolean[] = [];
     protected possibleBatteryExtensionMessage: Map<string, { color: string, text: string }> = new Map();
     private prepareBatteryExtensionCtrl: { [key: string]: EdgeConfig.Component };
 
@@ -135,6 +137,28 @@ export class StorageComponent extends AbstractFlatWidget {
                 new ChannelAddress(component.id, "_PropertyIsReserveSocEnabled"),
             );
         }
+
+        console.log("Starte Laden der chargeDischargeLimiterComponents");
+        // Get chargeDischargeLimiters
+        this.chargeDischargeLimiterComponents = this.config
+            .getComponentsByFactory("Controller.Ess.chargeDischargeLimiter")
+            .filter(component => component.isEnabled)
+            .reduce((result, component) => {
+                return {
+                    ...result,
+                    [component.properties["ess.id"]]: component,
+                };
+            }, {});
+        for (const component of Object.values(this.chargeDischargeLimiterComponents)) {
+            console.log("Verarbeite chargeDischargeLimiter Component:", component);
+            channelAddresses.push(
+                new ChannelAddress(component.id, "_PropertyMinSoc"),
+                new ChannelAddress(component.id, "_PropertyMaxSoc"),
+                new ChannelAddress(component.id, "_PropertyIsChargeDischargeLimiterEnabled"),
+            );
+        }
+        console.log("chargeDischargeLimiterComponents geladen:", this.chargeDischargeLimiterComponents);
+
         // Get Chargers
         // TODO should be moved to Modal
         this.chargerComponents = this.config

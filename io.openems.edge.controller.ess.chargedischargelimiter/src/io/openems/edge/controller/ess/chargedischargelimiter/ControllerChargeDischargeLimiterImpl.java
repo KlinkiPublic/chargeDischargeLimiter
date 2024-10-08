@@ -224,6 +224,11 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		}
 		this.applyActivePower(calculatedPower);
 		this.calculateEnergy();
+		
+		// Copied from Emergency Capacity Reserve Controller
+		// Set the actual reserve Soc. This channel is used mainly for visualization in
+		// UI.
+		this._setActualReserveSoc(this.minSoc);
 
 	}
 

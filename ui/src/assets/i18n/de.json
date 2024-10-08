@@ -14,6 +14,10 @@
         "INFO_FOR_EMERGENCY_RESERVE_SLIDER": "Durch Aktivieren kann eine Notstromreserve zwischen 5 % und 100 % der Batteriekapazität eingestellt werden.",
         "EMERGENCY_RESERVE": "Notstromreserve"
       },
+      "ChargeDischargeLimiter": {
+        "INFO_FOR_CHARGE_DISCHARGE_LIMITER_SLIDER": "Durch Aktivieren wird der Batteriespeicher zwischen eine Minimum und Maximum gehalten",
+        "CHARGE_DISCHARGE_LIMITER": "Arbeitsbereich"
+      },
       "Energymonitor": {
         "activePower": "Ausgabeleistung",
         "consumptionWarning": "Verbrauch & unbekannte Erzeuger",
@@ -611,6 +615,18 @@
       "VALUE": "Wert [%]",
       "EMERGENCY_RESERVE_LABEL": "Notstrom{{ symbol }}",
       "COUPLER_TITLE": "Welcher Feldbuskoppler ist in Ihrer Netztrennstelle verbaut?"
+    },
+    "CONFIGURATION_CHARGE_DISCHARGE_LIMITER": {
+      "EMERGENCY_RESERVE_NOTE": "ToDo: noch zu beschreiben",
+      "EMERGENCY_RESERVE_VALUE": "ToDo",
+      "EMERGENCY_RESERVE": "ToDo {{ symbol }}",
+      "IS_ACTIVATED": "ToDo",
+      "IS_ENABLED": "ToDo",
+      "RECENT": "ToDo",
+      "TITLE": "ToDo",
+      "VALUE": "ToDo",
+      "EMERGENCY_RESERVE_LABEL": "ToDo{{ symbol }}",
+      "COUPLER_TITLE": "ToDo"
     },
     "CONFIGURATION_EXECUTE": {
       "BATTERY_INVERTER": "Batterie-Wechselrichter",

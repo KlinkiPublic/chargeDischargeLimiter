@@ -183,6 +183,13 @@ export class PowerAssistantComponent extends AbstractFlatWidget {
         );
         break;
 
+      case "Controller.Ess.ChargeDischargeLimiter":
+        channels.push(
+          { title: "Mode", address: ctrlId + "/_PropertyIsChargeDischargeLimiterEnabled", converter: Converter.enabled() },
+          { title: "Set-Point", address: ctrlId + "/DebugSetActivePowerLessOrEquals", converter: Converter.unit("W") },
+        );
+        break;
+
       case "Controller.Ess.Time-Of-Use-Tariff":
         channels.push(
           { title: "StateMachine", address: ctrlId + "/StateMachine", converter: (value) => value },

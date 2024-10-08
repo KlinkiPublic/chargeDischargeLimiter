@@ -206,5 +206,35 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getBalancingSoc() {
 		return this.getBalancingSocChannel().value();
 	}
+	
+	// Copied from Emergency Controller too get a grip on UI visulization
+	/**
+	 * Gets the Channel for {@link ChannelId#ACTUAL_RESERVE_SOC}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getActualReserveSocChannel() {
+		return this.channel(ChannelId.MIN_SOC);
+	}
+
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#ACTUAL_RESERVE_SOC} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setActualReserveSoc(Integer value) {
+		this.getActualReserveSocChannel().setNextValue(value);
+	}
+
+	/**
+	 * Gets the SoC value if Reserve SoC is enabled and returns null otherwise. See
+	 * {@link ChannelId#ACTUAL_RESERVE_SOC}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getActualReserveSoc() {
+		return this.getActualReserveSocChannel().value();
+	}
 
 }
