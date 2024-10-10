@@ -19,7 +19,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 
 		STATE_MACHINE(Doc.of(State.values()) //
-				.text("Current State of State-Machine")), //
+				.text("Current State of State-Machine").persistencePriority(HIGH)), //
 
 		AWAITING_HYSTERESIS(Doc.of(Level.INFO) //
 				.text("Would change State, but hysteresis is active")),

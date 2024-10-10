@@ -234,17 +234,31 @@
                                 <!-- Show only when ChargeDischargeLimiter is enabled -->
                                 <ng-container
                                     *ngIf="formGroup.value[component.id]?.['chargeDischargeLimiterController']?.['minSoc'] && formGroup.value[component.id]?.['chargeDischargeLimiterController']?.['isChargeDischargeLimiterEnabled']">
-                                    <ion-range formControlName="minSoc" pin color="primary" min="5" max="80">
-                                        <ion-label slot="start">
-                                            {{ 5 | unitvalue:'%' }}
-                                        </ion-label>
-                                        <ion-label slot="end">
-                                            {{ 80 | unitvalue:'%' }}
-                                        </ion-label>
-                                    </ion-range>
+                                    <ion-item-divider color="light">
+                                        <oe-modal-line
+                                            [name]="'INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.MIN_SOC_VALUE' | translate"
+                                            [value]="formGroup.value[component.id]?.['chargeDischargeLimiterController']?.minSoc">
+                                        </oe-modal-line>
+                                        <ion-range formControlName="minSoc" pin color="primary" min="5" max="80">
+                                            <ion-label slot="start">
+                                                {{ 5 | unitvalue:'%' }}
+                                            </ion-label>
+                                            <ion-label slot="end">
+                                                {{ 80 | unitvalue:'%' }}
+                                            </ion-label>
+                                        </ion-range>
+                                    </ion-item-divider>
                                     <ion-range formControlName="maxSoc" pin color="primary" min="80" max="100">
                                         <ion-label slot="start">
                                             {{ 80 | unitvalue:'%' }}
+                                        </ion-label>
+                                        <ion-label slot="end">
+                                            {{ 100 | unitvalue:'%' }}
+                                        </ion-label>
+                                    </ion-range>
+                                    <ion-range formControlName="forceChargeSoc" pin color="primary" min="90" max="100">
+                                        <ion-label slot="start">
+                                            {{ 90 | unitvalue:'%' }}
                                         </ion-label>
                                         <ion-label slot="end">
                                             {{ 100 | unitvalue:'%' }}
