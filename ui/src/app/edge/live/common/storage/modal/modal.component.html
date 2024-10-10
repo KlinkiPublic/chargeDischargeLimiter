@@ -157,6 +157,93 @@
                             </ng-container>
                         </ng-container>
 
+
+                        <!-- Show if ess has chargeDischargeLimiterController assigned-->
+                        <ng-container [formGroupName]="'chargeDischargeLimiterController'"
+                            *ngIf="formGroup.value[component.id]?.['chargeDischargeLimiterController']">
+                            <pre>{{ formGroup.value[component.id]?.['chargeDischargeLimiterController'] | json }}</pre>
+
+                            <ng-container>
+                                <table class="full_width" style="margin-top: 2%;">
+                                    <tr>
+                                        <ion-item-divider color="light">
+                                            <td style="width: 15%;" translate>
+                                                INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.MIN_SOC_VALUE
+                                            </td>
+                                            <td style="width: 30%;" class="align_left">
+                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.minSoc|
+                                                unitvalue:'%' }}
+                                            </td>
+                                            <td style="width: 15%;" translate>
+                                                INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.MAX_SOC_VALUE
+                                            </td>
+                                            <td style="width: 10%;" class="align_left">
+                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.maxSoc|
+                                                unitvalue:'%' }}
+                                            </td>
+                                            <td style="width: 30%" class="align_right">
+
+                                                <!-- Sets the chargeDischargeLimiterEnabled temporarily, to show the slider without changing config  -->
+                                                <ng-container
+                                                    *ngIf="formGroup.controls[component.id].value['chargeDischargeLimiterController'].hasOwnProperty('isChargeDischargeLimiterEnabled')">
+                                                    <ion-toggle [formControlName]="'isChargeDischargeLimiterEnabled'">
+                                                    </ion-toggle>
+                                                </ng-container>
+                                            </td>
+                                        </ion-item-divider>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:65%" translate>
+                                            INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.CHARGED_ENERGY</td>
+                                        <td style="width:35%" class="align_right">
+                                            {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.chargedEnergy|
+                                            unitvalue:'kWh' }}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <table class="full_width" style="margin-top: 2%;">
+                                    <tr>
+                                        <td style="width: 10%">
+                                            <ion-icon name="information-outline" size="large"></ion-icon>
+                                        </td>
+                                        <td style="width: 90%">
+                                            <ion-note class="ion-text-wrap ion-align-items-center">
+                                                <ion-text>
+                                                    <small translate>
+                                                        Edge.Index.ChargeDischargeLimiter.INFO_FOR_CHARGE_DISCHARGE_LIMITER_SLIDER
+                                                    </small>
+                                                </ion-text>
+                                            </ion-note>
+                                        </td>
+                                    </tr>
+                                </table>
+
+
+                                <!-- Show only when ChargeDischargeLimiter is enabled -->
+                                <ng-container
+                                    *ngIf="formGroup.value[component.id]?.['chargeDischargeLimiterController']?.['minSoc'] && formGroup.value[component.id]?.['chargeDischargeLimiterController']?.['isChargeDischargeLimiterEnabled']">
+                                    <ion-range formControlName="minSoc" pin color="primary" min="5" max="80">
+                                        <ion-label slot="start">
+                                            {{ 5 | unitvalue:'%' }}
+                                        </ion-label>
+                                        <ion-label slot="end">
+                                            {{ 80 | unitvalue:'%' }}
+                                        </ion-label>
+                                    </ion-range>
+                                    <ion-range formControlName="maxSoc" pin color="primary" min="80" max="100">
+                                        <ion-label slot="start">
+                                            {{ 80 | unitvalue:'%' }}
+                                        </ion-label>
+                                        <ion-label slot="end">
+                                            {{ 100 | unitvalue:'%' }}
+                                        </ion-label>
+                                    </ion-range>
+                                </ng-container>
+
+                            </ng-container>
+                        </ng-container>
+
+                        <!-- Show if ess has prepareBatteryExtensionController assigned-->
                         <ng-container [formGroupName]="'prepareBatteryExtensionController'"
                             *ngIf="formGroup.value[component.id]?.['prepareBatteryExtensionController']?.hasOwnProperty('isRunning') && isAtLeastInstaller">
 

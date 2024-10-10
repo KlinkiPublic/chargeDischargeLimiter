@@ -16,8 +16,10 @@ import io.openems.edge.controller.api.Controller;
 public interface ControllerChargeDischargeLimiter extends Controller, OpenemsComponent {
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
+		/* what´s the use?
 		STATE_MACHINE(Doc.of(State.values()) //
 				.text("Current State of State-Machine")), //
+		*/
 		AWAITING_HYSTERESIS(Doc.of(Level.INFO) //
 				.text("Would change State, but hysteresis is active")),
 		/**
@@ -28,9 +30,12 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 		BALANCING_SOC(Doc.of(OpenemsType.INTEGER) //
 
 				.unit(Unit.PERCENT).persistencePriority(HIGH)), //
-		ACTIVE_CHARGE_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
+		BALANCING_REMAINING_SECONDS(Doc.of(OpenemsType.INTEGER) //
 
-				.unit(Unit.KILOWATT_HOURS).persistencePriority(HIGH)), //
+				.unit(Unit.SECONDS).persistencePriority(HIGH)), //
+		CHARGED_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
+
+				.unit(Unit.CUMULATED_WATT_HOURS).persistencePriority(HIGH)), //
 		MIN_SOC(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.PERCENT)), //
 		MAX_SOC(Doc.of(OpenemsType.INTEGER) //
@@ -86,12 +91,12 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	}
 
 	/**
-	 * Gets the Channel for {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
+	 * Gets the Channel for {@link ChannelId#CHARGED_ENERGY}.
 	 *
 	 * @return the Channel
 	 */
-	public default IntegerReadChannel getActiveChargeEnergyChannel() {
-		return this.channel(ChannelId.ACTIVE_CHARGE_ENERGY);
+	public default IntegerReadChannel getChargedEnergyChannel() {
+		return this.channel(ChannelId.CHARGED_ENERGY);
 	}
 
 	/**
@@ -150,22 +155,22 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 
 	/**
 	 * Internal method to set the 'nextValue' on
-	 * {@link ChannelId#ACTIVE_CHARGE_ENERGY} Channel.
+	 * {@link ChannelId#CHARGED_ENERGY} Channel.
 	 *
 	 * @param value the next value
 	 */
-	public default void _setActiveChargeEnergy(Integer value) {
-		this.getActiveChargeEnergyChannel().setNextValue(value);
+	public default void _setChargedEnergy(Integer value) {
+		this.getChargedEnergyChannel().setNextValue(value);
 	}
 
 	/**
 	 * Gets the maximum SoC value configured. See
-	 * {@link ChannelId#ACTIVE_CHARGE_ENERGY}.
+	 * {@link ChannelId#CHARGED_ENERGY}.
 	 *
 	 * @return the Channel {@link Value}
 	 */
-	public default Value<Integer> getActiveChargeEnergy() {
-		return this.getActiveChargeEnergyChannel().value();
+	public default Value<Integer> getChargedEnergy() {
+		return this.getChargedEnergyChannel().value();
 	}
 
 	/**
@@ -236,5 +241,35 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getActualReserveSoc() {
 		return this.getActualReserveSocChannel().value();
 	}
+	
+	/**
+	 * Gets the Channel for {@link ChannelId#BALANCING_REMAINING_SECONDS}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getBalancingRemainingSecondsChannel() {
+		return this.channel(ChannelId.BALANCING_REMAINING_SECONDS);
+	}
+
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#BALANCING_REMAINING_SECONDS} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setBalancingRemainingSeconds(Integer value) {
+		this.getBalancingRemainingSecondsChannel().setNextValue(value);
+	}
+
+	/**
+	 * Gets the SoC value if Reserve SoC is enabled and returns null otherwise. See
+	 * {@link ChannelId#BALANCING_REMAINING_SECONDS}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default Value<Integer> getBalancingRemainingSeconds() {
+		return this.getBalancingRemainingSecondsChannel().value();
+	}
+	
 
 }

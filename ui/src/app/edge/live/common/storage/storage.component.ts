@@ -138,7 +138,7 @@ export class StorageComponent extends AbstractFlatWidget {
             );
         }
 
-        console.log("Starte Laden der chargeDischargeLimiterComponents");
+        //console.log("Starte Laden der chargeDischargeLimiterComponents");
         // Get chargeDischargeLimiters
         this.chargeDischargeLimiterComponents = this.config
             .getComponentsByFactory("Controller.Ess.ChargeDischargeLimiter")
@@ -150,15 +150,20 @@ export class StorageComponent extends AbstractFlatWidget {
                 };
             }, {});
         for (const component of Object.values(this.chargeDischargeLimiterComponents)) {
-            console.log("Verarbeite chargeDischargeLimiter Component:", component);
-            console.log("Component Properties:", component.properties);
+            //console.log("Verarbeite chargeDischargeLimiter Component:", component);
+            //console.log("Component Properties:", component.properties);
             channelAddresses.push(
                 new ChannelAddress(component.id, "_PropertyMinSoc"),
                 new ChannelAddress(component.id, "_PropertyMaxSoc"),
+                new ChannelAddress(component.id, "_PropertyForceChargeSoc"),
                 new ChannelAddress(component.id, "_PropertyIsChargeDischargeLimiterEnabled"),
+                new ChannelAddress(component.id, "_PropertyEnergyBetweenBalancingCycles"),
+                new ChannelAddress(component.id, "State"),
+                new ChannelAddress(component.id, "BalancingRemainingSeconds"),
+                new ChannelAddress(component.id, "ChargedEnergy"),
             );
         }
-        console.log("chargeDischargeLimiterComponents geladen:", this.chargeDischargeLimiterComponents);
+        //console.log("chargeDischargeLimiterComponents geladen:", this.chargeDischargeLimiterComponents);
 
         // Get Chargers
         // TODO should be moved to Modal
@@ -236,6 +241,8 @@ export class StorageComponent extends AbstractFlatWidget {
             const controller = this.chargeDischargeLimiterComponents[essId];
             controller["minSoc"] = currentData.allComponents[controller.id + "/_PropertyMinSoc"];
             controller["maxSoc"] = currentData.allComponents[controller.id + "/_PropertyMaxSoc"];
+            controller["forceSoc"] = currentData.allComponents[controller.id + "/_PropertyForceChargeSoc"];
+            controller["state"] = currentData.allComponents[controller.id + "/State"]; // State 6 is Balancing active
             this.isChargeDischargeLimiterEnabled[essId] = currentData.allComponents[controller.id + "/_PropertyIsChargeDischargeLimiterEnabled"] == 1 ? true : false;
         }
     }
