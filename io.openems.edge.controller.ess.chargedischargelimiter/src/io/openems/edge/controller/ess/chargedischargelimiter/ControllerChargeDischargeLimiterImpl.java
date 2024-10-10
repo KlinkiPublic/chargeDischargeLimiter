@@ -45,13 +45,14 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * Length of hysteresis in minutes. States are not changed quicker than this.
 	 * 
 	 */
-	private static final int HYSTERESIS = 30; // seconds
+	private static final int HYSTERESIS = 5; // seconds
 	private Instant lastStateChangeTime = Instant.MIN;
 	private Instant balancingStartTime = Instant.MIN;
 	private long balancingTime = 0; // Time used for balancing so far
 	private int balancingRemainingTime = 0; // Remaining time for balancing. Used in UI
 	private long lastEssActiveChargeEnergy = 0;
 	private Integer chargedEnergy = 0;
+	private boolean resetChargedEnergy = false;
 
 	private int minSoc = 0;
 
@@ -205,7 +206,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 				// Balancing time is over, transition to NORMAL state
 				this.logDebug(this.log, "\nBalancing finished. Going back to normal operation  ");
 				this.changeState(State.NORMAL);
-				this.resetChargedEnergy(); // Reset charged energy
+				this.resetChargedEnergy = true;; // Reset charged energy
 				balancingStartTime = Instant.MIN; // Reset the balancing start time
 				this.balancingRemainingTime = 0; // Reset remaining time
 				break;
@@ -355,15 +356,15 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		this.chargedEnergy = this.chargedEnergy + (int) energyDifference;
 
 		this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
-		this._setChargedEnergy(chargedEnergy);
+		
+		if (this.resetChargedEnergy) {
+			this.chargedEnergy = 0;	
+			this.resetChargedEnergy = false;
+		}
+		this._setChargedEnergy(this.chargedEnergy);
 
 	}
 
-	public void resetChargedEnergy() {
-		this.chargedEnergy = 0;
-		this.lastEssActiveChargeEnergy = 0;
-		this._setChargedEnergy(chargedEnergy);
-	}
 
 	/**
 	 * Uses Info Log for further debug features.
