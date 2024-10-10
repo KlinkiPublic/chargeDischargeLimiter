@@ -617,15 +617,18 @@
       "COUPLER_TITLE": "Welcher Feldbuskoppler ist in Ihrer Netztrennstelle verbaut?"
     },
     "CONFIGURATION_CHARGE_DISCHARGE_LIMITER": {
-      "EMERGENCY_RESERVE_NOTE": "ToDo: noch zu beschreiben",
-      "EMERGENCY_RESERVE_VALUE": "ToDo",
-      "EMERGENCY_RESERVE": "ToDo {{ symbol }}",
-      "IS_ACTIVATED": "ToDo",
-      "IS_ENABLED": "ToDo",
-      "RECENT": "ToDo",
-      "TITLE": "ToDo",
-      "VALUE": "ToDo",
-      "EMERGENCY_RESERVE_LABEL": "ToDo{{ symbol }}",
+      "CHARGE_DISCHARGE_LIMITER_NOTE": "Wenn diese Funktion aktiviert ist, bewegt sich der Ladezusatnd der Batterie zwischen der oberen und unteren Grenze. Nach der eingestellten Energiemenge versucht die Batterie sich zu kalibrieren",
+      "MIN_SOC_VALUE": "min. SoC",
+      "MIN_SOC": "ToDo {{ symbol }}",
+      "MAX_SOC_VALUE": "max. SoC",
+      "MAX_SOC": "ToDo {{ symbol }}",
+      "IS_ACTIVATED": "Controller aktiviert?",
+      "IS_ENABLED": "Soll die Ladebegrenzung aktiviert werden?",
+      "RECENT": "Aktuell",
+      "TITLE": "Angaben zum Laden / Entladen Limiter",
+      "VALUE": "Wert [%]",
+      "CHARGED_ENERGY": "Geladene Energie",
+      "EMERGENCY_RESERVE_LABEL": "Lade / Entladen Limiter{{ symbol }}",
       "COUPLER_TITLE": "ToDo"
     },
     "CONFIGURATION_EXECUTE": {
