@@ -158,7 +158,7 @@ export class StorageComponent extends AbstractFlatWidget {
                 new ChannelAddress(component.id, "_PropertyForceChargeSoc"),
                 new ChannelAddress(component.id, "_PropertyIsChargeDischargeLimiterEnabled"),
                 new ChannelAddress(component.id, "_PropertyEnergyBetweenBalancingCycles"),
-                new ChannelAddress(component.id, "State"),
+                new ChannelAddress(component.id, "StateMachine"),
                 new ChannelAddress(component.id, "BalancingRemainingSeconds"),
                 new ChannelAddress(component.id, "ChargedEnergy"),
             );
@@ -242,7 +242,7 @@ export class StorageComponent extends AbstractFlatWidget {
             controller["minSoc"] = currentData.allComponents[controller.id + "/_PropertyMinSoc"];
             controller["maxSoc"] = currentData.allComponents[controller.id + "/_PropertyMaxSoc"];
             controller["forceSoc"] = currentData.allComponents[controller.id + "/_PropertyForceChargeSoc"];
-            controller["state"] = currentData.allComponents[controller.id + "/State"]; // State 6 is Balancing active
+            controller["state"] = currentData.allComponents[controller.id + "/StateMachine"]; // State 6 is Balancing active
             this.isChargeDischargeLimiterEnabled[essId] = currentData.allComponents[controller.id + "/_PropertyIsChargeDischargeLimiterEnabled"] == 1 ? true : false;
         }
     }

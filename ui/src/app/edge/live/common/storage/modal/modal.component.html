@@ -163,35 +163,47 @@
                             *ngIf="formGroup.value[component.id]?.['chargeDischargeLimiterController']">
                             <pre>{{ formGroup.value[component.id]?.['chargeDischargeLimiterController'] | json }}</pre>
 
+                            <oe-modal-line [name]="'General.mode' | translate"
+                                [value]="formGroup.value[component.id]?.['chargeDischargeLimiterController']?.state">
+                            </oe-modal-line>
+
                             <ng-container>
                                 <table class="full_width" style="margin-top: 2%;">
                                     <tr>
                                         <ion-item-divider color="light">
-                                            <td style="width: 15%;" translate>
+                                            <td style="width: 15%;" translate class="align_right">
                                                 INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.MIN_SOC_VALUE
                                             </td>
-                                            <td style="width: 30%;" class="align_left">
-                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.minSoc|
-                                                unitvalue:'%' }}
+                                            <td style="width: 10%;" class="align_left">
+                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.minSoc
+                                                | unitvalue:'%' }}
                                             </td>
-                                            <td style="width: 15%;" translate>
+                                            <td style="width: 15%;" translate class="align_right">
                                                 INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.MAX_SOC_VALUE
                                             </td>
                                             <td style="width: 10%;" class="align_left">
-                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.maxSoc|
-                                                unitvalue:'%' }}
+                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.maxSoc
+                                                | unitvalue:'%' }}
                                             </td>
-                                            <td style="width: 30%" class="align_right">
+                                            <td style="width: 15%;" translate class="align_right">
+                                                INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.FORCE_SOC_VALUE
+                                            </td>
 
-                                                <!-- Sets the chargeDischargeLimiterEnabled temporarily, to show the slider without changing config  -->
+                                            <td style="width: 10%;" class="align_left">
+                                                {{formGroup.value[component.id]?.['chargeDischargeLimiterController']?.forceChargeSoc
+                                                | unitvalue:'%' }}
+                                            </td>
+                                            <td style="width: auto;">
                                                 <ng-container
                                                     *ngIf="formGroup.controls[component.id].value['chargeDischargeLimiterController'].hasOwnProperty('isChargeDischargeLimiterEnabled')">
-                                                    <ion-toggle [formControlName]="'isChargeDischargeLimiterEnabled'">
-                                                    </ion-toggle>
+                                                    <ion-toggle
+                                                        [formControlName]="'isChargeDischargeLimiterEnabled'"></ion-toggle>
                                                 </ng-container>
                                             </td>
                                         </ion-item-divider>
                                     </tr>
+                                </table>
+                                <table>
                                     <tr>
                                         <td style="width:65%" translate>
                                             INSTALLATION.CONFIGURATION_CHARGE_DISCHARGE_LIMITER.CHARGED_ENERGY</td>

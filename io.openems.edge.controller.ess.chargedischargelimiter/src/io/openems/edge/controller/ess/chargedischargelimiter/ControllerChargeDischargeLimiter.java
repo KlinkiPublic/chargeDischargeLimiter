@@ -6,6 +6,7 @@ import static io.openems.common.channel.PersistencePriority.HIGH;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.StateChannel;
@@ -16,10 +17,10 @@ import io.openems.edge.controller.api.Controller;
 public interface ControllerChargeDischargeLimiter extends Controller, OpenemsComponent {
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-		/* what´s the use?
+
 		STATE_MACHINE(Doc.of(State.values()) //
 				.text("Current State of State-Machine")), //
-		*/
+
 		AWAITING_HYSTERESIS(Doc.of(Level.INFO) //
 				.text("Would change State, but hysteresis is active")),
 		/**
@@ -35,7 +36,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 				.unit(Unit.SECONDS).persistencePriority(HIGH)), //
 		CHARGED_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
 
-				.unit(Unit.CUMULATED_WATT_HOURS).persistencePriority(HIGH)), //
+				.unit(Unit.WATT_HOURS).persistencePriority(HIGH)), //
 		MIN_SOC(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.PERCENT)), //
 		MAX_SOC(Doc.of(OpenemsType.INTEGER) //
@@ -162,6 +163,16 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default void _setChargedEnergy(Integer value) {
 		this.getChargedEnergyChannel().setNextValue(value);
 	}
+	
+	/**
+	 * Internal method to set the 'nextValue' on
+	 * {@link ChannelId#CHARGED_ENERGY} Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setChargedEnergy(int value) {
+		this.getChargedEnergyChannel().setNextValue(value);
+	}	
 
 	/**
 	 * Gets the maximum SoC value configured. See
@@ -270,6 +281,35 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getBalancingRemainingSeconds() {
 		return this.getBalancingRemainingSecondsChannel().value();
 	}
-	
+
+
+	/**
+	 * Gets the Channel for {@link ChannelId#STATE_MACHINE}.
+	 *
+	 * @return the Channel
+	 */
+	public default Channel<State> getStateMachineChannel() {
+		return this.channel(ChannelId.STATE_MACHINE);
+	}
+
+	/**
+	 * Gets current state of the {@link StateMachine}. See
+	 * {@link ChannelId#STATE_MACHINE}.
+	 *
+	 * @return the Channel {@link Value}
+	 */
+	public default State getStateMachine() {
+		return this.getStateMachineChannel().value().asEnum();
+	}
+
+	/**
+	 * Internal method to set the 'nextValue' on {@link ChannelId#STATE_MACHINE}
+	 * Channel.
+	 *
+	 * @param value the next value
+	 */
+	public default void _setStateMachine(State value) {
+		this.getStateMachineChannel().setNextValue(value);
+	}	
 
 }

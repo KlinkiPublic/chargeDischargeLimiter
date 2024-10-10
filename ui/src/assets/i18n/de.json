@@ -618,6 +618,8 @@
     },
     "CONFIGURATION_CHARGE_DISCHARGE_LIMITER": {
       "CHARGE_DISCHARGE_LIMITER_NOTE": "Wenn diese Funktion aktiviert ist, bewegt sich der Ladezusatnd der Batterie zwischen der oberen und unteren Grenze. Nach der eingestellten Energiemenge versucht die Batterie sich zu kalibrieren",
+      "FORCE_SOC_VALUE": "kal. SoC",
+      "FORCE_SOC": "ToDo {{ symbol }}",
       "MIN_SOC_VALUE": "min. SoC",
       "MIN_SOC": "ToDo {{ symbol }}",
       "MAX_SOC_VALUE": "max. SoC",

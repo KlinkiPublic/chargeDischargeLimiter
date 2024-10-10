@@ -91,15 +91,27 @@ export class StorageModalComponent implements OnInit, OnDestroy {
                                 }),
                             );
                         } else if (controller.factoryId == "Controller.Ess.ChargeDischargeLimiter") {
+                            enum ChargeDischargeControllerState {
+                                UNDEFINED = -1,             // Undefined / initial state
+                                NORMAL = 0,                 // Normal operation
+                                ERROR = 1,                  //
+                                BELOW_MIN_SOC = 2,          // ESS SoC is below configured minimum
+                                ABOVE_MAX_SOC = 3,           // Above configured Max-SoC")
+                                FORCE_CHARGE_ACTIVE = 4,    // ESS is charging to configured balancing point
+                                BALANCING_WANTED = 5,       // balancing procedure is desired
+                                BALANCING_ACTIVE = 6,       // balancing is active
+                            }
+
                             const minSoc = currentData.channel[controller.id + "/_PropertyMinSoc"];
                             const maxSoc = currentData.channel[controller.id + "/_PropertyMaxSoc"];
                             const forceChargeSoc = currentData.channel[controller.id + "/_PropertyForceChargeSoc"];
                             const energyBetweenBalancingCycles = currentData.channel[controller.id + "/_PropertyEnergyBetweenBalancingCycles"];
-                            const state = currentData.channel[controller.id + "/State"];
+                            const stateNumber = currentData.channel[controller.id + "/StateMachine"];
                             const balancingRemainingSeconds = currentData.channel[controller.id + "/BalancingRemainingSeconds"];
                             const chargedEnergy = currentData.channel[controller.id + "/ChargedEnergy"];
 
                             const isChargeDischargeLimiterEnabled = currentData.channel[controller.id + "/_PropertyIsChargeDischargeLimiterEnabled"] == 1;
+                            const state = ChargeDischargeControllerState[stateNumber] ?? ChargeDischargeControllerState.UNDEFINED;
 
                             controllerFrmGrp.addControl("chargeDischargeLimiterController",
                                 this.formBuilder.group({

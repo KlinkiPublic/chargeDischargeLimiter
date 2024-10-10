@@ -25,7 +25,6 @@ import io.openems.edge.controller.api.Controller;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Pwr;
-import io.openems.edge.timedata.api.utils.CalculateEnergyFromPower;
 import io.openems.edge.timedata.api.Timedata;
 import io.openems.edge.timedata.api.TimedataProvider;
 
@@ -40,9 +39,6 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 	private final Logger log = LoggerFactory.getLogger(ControllerChargeDischargeLimiterImpl.class);
 
-	private final CalculateEnergyFromPower calculateChargeEnergy = new CalculateEnergyFromPower(this,
-			ControllerChargeDischargeLimiter.ChannelId.CHARGED_ENERGY);
-
 	private Config config;
 
 	/**
@@ -54,6 +50,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private Instant balancingStartTime = Instant.MIN;
 	private long balancingTime = 0; // Time used for balancing so far
 	private int balancingRemainingTime = 0; // Remaining time for balancing. Used in UI
+	private long lastEssActiveChargeEnergy = 0;
+	private Integer chargedEnergy = 0;
 
 	private int minSoc = 0;
 
@@ -93,13 +91,13 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			this.maxSoc = this.config.maxSoc();
 			this.forceChargeSoc = this.config.forceChargeSoc(); // if battery need balancing we charge to this value
 			this.forceChargePower = this.config.forceChargePower(); // if battery need balancing we charge to this value
-			this.energyBetweenBalancingCycles = this.config.energyBetweenBalancingCycles() *1000; // convert kWh to Wh
+			this.energyBetweenBalancingCycles = this.config.energyBetweenBalancingCycles() * 1000; // convert kWh to Wh
 			this.balancingHysteresisTime = this.config.balancingHysteresis();
-			
+
 			if (config.energyBetweenBalancingCycles() > 0) {
 				this.balancingWanted = true;
 			}
-			
+
 		} catch (OpenemsNamedException e) {
 
 			e.printStackTrace();
@@ -115,12 +113,13 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	@Override
 	public void run() throws OpenemsNamedException {
 // method stub		
+
+		this._setChargedEnergy(0); // Reset charged energy
 		// Remember: Negative values for Charge; positive for Discharge
-		this.logDebug(this.log, "\nCurrent State " + this.state.getName()  + "\n" 
-				+ "Current SoC " + this.ess.getSoc().get()  + "% \n"
-				+ "Current ActivePower " + this.ess.getActivePower().get()  + "W \n"
-				+ "Energy charged since last balancing " + this.getChargedEnergy().get()  + "Wh \n"
-				);
+		this.logDebug(this.log,
+				"\nCurrent State " + this.state.getName() + "\n" + "Current SoC " + this.ess.getSoc().get() + "% \n"
+						+ "Current ActivePower " + this.ess.getActivePower().get() + "W \n"
+						+ "Energy charged since last balancing " + this.getChargedEnergy().get() + "Wh \n");
 		this.calculatedPower = null; // No constraints
 		switch (this.state) {
 		case UNDEFINED:
@@ -135,9 +134,10 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			}
 			break;
 		case NORMAL:
-			// 
+			//
 			this._setBalancingRemainingSeconds(0); // no remaining time in normal operation
-			// check if charge energy is below the next balancing cycle. Only balance if this is desired
+			// check if charge energy is below the next balancing cycle. Only balance if
+			// this is desired
 			if (shouldBalance() && this.balancingWanted) {
 				this.changeState(State.BALANCING_WANTED);
 				break;
@@ -195,27 +195,28 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 				this.log.info("Balancing started at " + balancingStartTime);
 				// ToDo: channel for balancing remaining time needed for UI modal
 			}
-			this.logDebug(this.log, "\nBalancing active since " + this.balancingStartTime);
-			
+
 			// calculate balancing time so far to seconds
-			this.balancingTime = Duration.between(balancingStartTime, Instant.now(this.componentManager.getClock())).getSeconds();
-			
+			this.balancingTime = Duration.between(balancingStartTime, Instant.now(this.componentManager.getClock()))
+					.getSeconds();
+
 			// Check if balancing duration has passed
 			if (this.balancingTime >= this.balancingHysteresisTime) {
 				// Balancing time is over, transition to NORMAL state
 				this.logDebug(this.log, "\nBalancing finished. Going back to normal operation  ");
 				this.changeState(State.NORMAL);
-				this._setChargedEnergy(0); // Reset charged energy
+				this.resetChargedEnergy(); // Reset charged energy
 				balancingStartTime = Instant.MIN; // Reset the balancing start time
 				this.balancingRemainingTime = 0; // Reset remaining time
 				break;
 			} else {
 				this.balancingRemainingTime = (int) (this.balancingHysteresisTime - this.balancingTime);
 			}
-
+			this.logDebug(this.log, "Balancing active since " + this.balancingStartTime + "|Remaining: "
+					+ this.balancingRemainingTime + "s \n");
 			// Stores remaining seconds for balancing in channel
 			this._setBalancingRemainingSeconds(this.balancingRemainingTime);
-			
+
 			// Keep battery SOC above desired level. Assume battery is self-discharging
 			// constantly
 			if (ess.getSoc() != null && ess.getSoc().get() < (this.forceChargeSoc) + 1) {
@@ -236,13 +237,15 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 		}
 		this.applyActivePower(calculatedPower);
-		this.calculateEnergy();
-		
+		this.calculateChargedEnergy();
+
 		// Copied from Emergency Capacity Reserve Controller
 		// Set the actual reserve Soc. This channel is used mainly for visualization in
 		// UI.
 		this._setActualReserveSoc(this.minSoc);
-
+		
+		// save current state
+		this._setStateMachine(this.state);
 	}
 
 	/**
@@ -253,7 +256,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * @return if battery should be balanced
 	 */
 	private boolean shouldBalance() {
-		// this.logDebug(this.log, "\nCharged " + this.getActiveChargeEnergy().get() + " since last balancing cycle");
+		// this.logDebug(this.log, "\nCharged " + this.getActiveChargeEnergy().get() + "
+		// since last balancing cycle");
 		if (this.state == State.BALANCING_ACTIVE || this.getChargedEnergy().get() == null) {
 			return false; // early return
 		}
@@ -290,6 +294,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 				calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
 						calculatedPower);
 				ess.setActivePowerLessOrEquals(calculatedPower);
+				
 			}
 		} catch (OpenemsNamedException e) {
 			// ToDo catch exception. Add logging
@@ -328,26 +333,36 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	}
 
 	/**
-	 * Calculates discharge energy from power. Negative values (charging) are
-	 * ignored.
+	 * Positive values (discharging) are ignored.
 	 *
 	 * @param nextState the target state
 	 * @return whether the state was changed
 	 */
-	private void calculateEnergy() {
-		// Calculate Energy
-		Integer activePower = this.ess.getActivePower().get();
+	private void calculateChargedEnergy() {
+		// 
+		Long currentEssActiveChargeEnergy = this.ess.getActiveChargeEnergy().get(); // charge energy directly from ESS
+		this.chargedEnergy = this.getChargedEnergy().get(); // charged energy sind last reset from this controller channel
 
-		if (activePower == null) {
-			// Not available
-			this.calculateChargeEnergy.update(null);
-			// ToDo: Log Error
-		} else if (activePower > 0) {
-			this.calculateChargeEnergy.update(activePower *100); // factor is for debugging
-		} else {
-			this.calculateChargeEnergy.update(0);
+		if (currentEssActiveChargeEnergy == null || this.chargedEnergy == null) {
+			return; // early exit if data is not available yet
 		}
 
+		int energyDifference = (int) (currentEssActiveChargeEnergy - this.lastEssActiveChargeEnergy);
+		if (energyDifference < 0 || currentEssActiveChargeEnergy == null) {
+			return; // early exit
+		}
+
+		this.chargedEnergy = this.chargedEnergy + (int) energyDifference;
+
+		this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
+		this._setChargedEnergy(chargedEnergy);
+
+	}
+
+	public void resetChargedEnergy() {
+		this.chargedEnergy = 0;
+		this.lastEssActiveChargeEnergy = 0;
+		this._setChargedEnergy(chargedEnergy);
 	}
 
 	/**
