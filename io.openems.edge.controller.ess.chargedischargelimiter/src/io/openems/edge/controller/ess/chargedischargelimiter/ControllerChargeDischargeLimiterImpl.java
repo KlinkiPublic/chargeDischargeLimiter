@@ -50,7 +50,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private Instant balancingStartTime = Instant.MIN;
 	private long balancingTime = 0; // Time used for balancing so far
 	private int balancingRemainingTime = 0; // Remaining time for balancing. Used in UI
-	private long lastEssActiveChargeEnergy = 0;
+	private Long lastEssActiveChargeEnergy = null;
 	private Integer chargedEnergy = 0;
 	private boolean resetChargedEnergy = false;
 
@@ -340,30 +340,47 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * @return whether the state was changed
 	 */
 	private void calculateChargedEnergy() {
-		// 
-		Long currentEssActiveChargeEnergy = this.ess.getActiveChargeEnergy().get(); // charge energy directly from ESS
-		this.chargedEnergy = this.getChargedEnergy().get(); // charged energy sind last reset from this controller channel
+	    // Ess Active Charge Energy directly from ESS (cumulative)
+	    Long currentEssActiveChargeEnergy = this.ess.getActiveChargeEnergy().get(); // Cumulative ESS charge energy
+	    Integer storedChargedEnergy = this.getChargedEnergy().get(); // Stored charged energy from this controller's channel
 
-		if (currentEssActiveChargeEnergy == null || this.chargedEnergy == null) {
-			return; // early exit if data is not available yet
-		}
+	    // Early exit if any data is not available
+	    if (currentEssActiveChargeEnergy == null) {
+	        return;
+	    }
 
-		int energyDifference = (int) (currentEssActiveChargeEnergy - this.lastEssActiveChargeEnergy);
-		if (energyDifference < 0 || currentEssActiveChargeEnergy == null) {
-			return; // early exit
-		}
+	    // If it's the first time or if the lastEssActiveChargeEnergy is null, initialize it
+	    if (this.lastEssActiveChargeEnergy == null) {
+	        this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
+	        return;
+	    }
 
-		this.chargedEnergy = this.chargedEnergy + (int) energyDifference;
+	    // Calculate energy difference
+	    int energyDifference = (int) (currentEssActiveChargeEnergy - this.lastEssActiveChargeEnergy);
 
-		this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
-		
-		if (this.resetChargedEnergy) {
-			this.chargedEnergy = 0;	
-			this.resetChargedEnergy = false;
-		}
-		this._setChargedEnergy(this.chargedEnergy);
+	    // Only proceed if there is an actual increase in energy (positive energyDifference)
+	    if (energyDifference > 0) {
+	        if (storedChargedEnergy == null) {
+	            storedChargedEnergy = 0; // Initialize stored charged energy if it's not set
+	        }
 
+	        // Update charged energy by adding the difference
+	        this.chargedEnergy = storedChargedEnergy + energyDifference;
+
+	        // Update the last known cumulative energy
+	        this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
+
+	        // If reset is flagged (e.g., calibration completed), reset the charged energy
+	        if (this.resetChargedEnergy) {
+	            this.chargedEnergy = 0;	
+	            this.resetChargedEnergy = false;
+	        }
+
+	        // Set the updated charged energy in the controller's channel
+	        this._setChargedEnergy(this.chargedEnergy);
+	    }
 	}
+
 
 
 	/**

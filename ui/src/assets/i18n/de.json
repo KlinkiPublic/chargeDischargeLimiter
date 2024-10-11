@@ -625,13 +625,24 @@
       "MAX_SOC_VALUE": "max. SoC",
       "MAX_SOC": "ToDo {{ symbol }}",
       "IS_ACTIVATED": "Controller aktiviert?",
-      "IS_ENABLED": "Soll die Ladebegrenzung aktiviert werden?",
+      "IS_ENABLED": "Soll die Lade-/Entladebegrenzung aktiviert werden?",
       "RECENT": "Aktuell",
       "TITLE": "Angaben zum Laden / Entladen Limiter",
       "VALUE": "Wert [%]",
-      "CHARGED_ENERGY": "Geladene Energie",
       "EMERGENCY_RESERVE_LABEL": "Lade / Entladen Limiter{{ symbol }}",
       "COUPLER_TITLE": "ToDo"
+    },
+    "CHARGE_DISCHARGE_STATE": {
+      "UNDEFINED": "Unbestimmt / Initialzustand",
+      "NORMAL": "Normalbetrieb",
+      "ERROR": "Fehler",
+      "BELOW_MIN_SOC": "Unterhalb des konfigurierten Minimum-SoC",
+      "ABOVE_MAX_SOC": "Oberhalb des konfigurierten Maximum-SoC",
+      "FORCE_CHARGE_ACTIVE": "Batterie lädt bis zum konfigurierten Ausgleichspunkt",
+      "BALANCING_WANTED": "Kalibrierung erwünscht",
+      "BALANCING_ACTIVE": "Kalibrierung aktiv",
+      "BALANCING_REMAINING_SECONDS": "Restzeit: ",
+      "CHARGED_ENERGY_SINCE_LAST_BALANCING": "Geladene Energie seit der letzten Kalibrierung: "
     },
     "CONFIGURATION_EXECUTE": {
       "BATTERY_INVERTER": "Batterie-Wechselrichter",
