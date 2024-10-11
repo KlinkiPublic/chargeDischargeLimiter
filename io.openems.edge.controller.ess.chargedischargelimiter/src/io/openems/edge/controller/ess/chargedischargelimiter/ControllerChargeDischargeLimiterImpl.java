@@ -65,6 +65,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	private Integer calculatedPower = null;
 	private boolean balancingWanted = false;
 
+	private boolean debugMode = false;
+
 	@Reference
 	private ComponentManager componentManager;
 
@@ -94,7 +96,17 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			this.forceChargePower = this.config.forceChargePower(); // if battery need balancing we charge to this value
 			this.energyBetweenBalancingCycles = this.config.energyBetweenBalancingCycles() * 1000; // convert kWh to Wh
 			this.balancingHysteresisTime = this.config.balancingHysteresis();
+			this.debugMode = this.config.debugMode();
 
+	        // 
+	        this.chargedEnergy = this.getChargedEnergy().get();
+
+	        // Fallback: set default value if channel´s not available
+	        if (this.chargedEnergy == null) {
+	            this.chargedEnergy = 0;
+	            this._setChargedEnergy(this.chargedEnergy); // save value to channel
+	        }			
+			
 			if (config.energyBetweenBalancingCycles() > 0) {
 				this.balancingWanted = true;
 			}
@@ -113,9 +125,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 	@Override
 	public void run() throws OpenemsNamedException {
-// method stub		
 
-		this._setChargedEnergy(0); // Reset charged energy
 		// Remember: Negative values for Charge; positive for Discharge
 		this.logDebug(this.log,
 				"\nCurrent State " + this.state.getName() + "\n" + "Current SoC " + this.ess.getSoc().get() + "% \n"
@@ -206,7 +216,8 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 				// Balancing time is over, transition to NORMAL state
 				this.logDebug(this.log, "\nBalancing finished. Going back to normal operation  ");
 				this.changeState(State.NORMAL);
-				this.resetChargedEnergy = true;; // Reset charged energy
+				this.resetChargedEnergy = true;
+				; // Reset charged energy
 				balancingStartTime = Instant.MIN; // Reset the balancing start time
 				this.balancingRemainingTime = 0; // Reset remaining time
 				break;
@@ -244,7 +255,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 		// Set the actual reserve Soc. This channel is used mainly for visualization in
 		// UI.
 		this._setActualReserveSoc(this.minSoc);
-		
+
 		// save current state
 		this._setStateMachine(this.state);
 	}
@@ -295,7 +306,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 				calculatedPower = ess.getPower().fitValueIntoMinMaxPower(this.id(), ess, Phase.ALL, Pwr.ACTIVE,
 						calculatedPower);
 				ess.setActivePowerLessOrEquals(calculatedPower);
-				
+
 			}
 		} catch (OpenemsNamedException e) {
 			// ToDo catch exception. Add logging
@@ -340,55 +351,49 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	 * @return whether the state was changed
 	 */
 	private void calculateChargedEnergy() {
-	    // Ess Active Charge Energy directly from ESS (cumulative)
-	    Long currentEssActiveChargeEnergy = this.ess.getActiveChargeEnergy().get(); // Cumulative ESS charge energy
-	    Integer storedChargedEnergy = this.getChargedEnergy().get(); // Stored charged energy from this controller's channel
+		// Ess Active Charge Energy directly from ESS (cumulative)
+		Long currentEssActiveChargeEnergy = this.ess.getActiveChargeEnergy().get(); // Cumulative ESS charge energy
+		Integer storedChargedEnergy = this.getChargedEnergy().get(); // Stored charged energy from this controller's
+																		// channel
 
-	    // Early exit if any data is not available
-	    if (currentEssActiveChargeEnergy == null) {
-	        return;
-	    }
+		// Early exit if any data is not available
+		if (currentEssActiveChargeEnergy == null || storedChargedEnergy == null) {
+			return;
+		}
 
-	    // If it's the first time or if the lastEssActiveChargeEnergy is null, initialize it
-	    if (this.lastEssActiveChargeEnergy == null) {
-	        this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
-	        return;
-	    }
+		// If it's the first time or if the lastEssActiveChargeEnergy is null,
+		// initialize it
+		if (this.lastEssActiveChargeEnergy == null) {
+			this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
+			return;
+		}
 
-	    // Calculate energy difference
-	    int energyDifference = (int) (currentEssActiveChargeEnergy - this.lastEssActiveChargeEnergy);
+		// Calculate energy difference
+		int energyDifference = (int) (currentEssActiveChargeEnergy - this.lastEssActiveChargeEnergy);
 
-	    // Only proceed if there is an actual increase in energy (positive energyDifference)
-	    if (energyDifference > 0) {
-	        if (storedChargedEnergy == null) {
-	            storedChargedEnergy = 0; // Initialize stored charged energy if it's not set
-	        }
+		// Update charged energy by adding the difference
+		this.chargedEnergy = storedChargedEnergy + energyDifference;
 
-	        // Update charged energy by adding the difference
-	        this.chargedEnergy = storedChargedEnergy + energyDifference;
+		// Update the last known cumulative energy
+		this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
 
-	        // Update the last known cumulative energy
-	        this.lastEssActiveChargeEnergy = currentEssActiveChargeEnergy;
+		// If reset is flagged (e.g., calibration completed), reset the charged energy
+		if (this.resetChargedEnergy) {
+			this.chargedEnergy = 0;
+			this.resetChargedEnergy = false;
+		}
 
-	        // If reset is flagged (e.g., calibration completed), reset the charged energy
-	        if (this.resetChargedEnergy) {
-	            this.chargedEnergy = 0;	
-	            this.resetChargedEnergy = false;
-	        }
+		// Set the updated charged energy in the controller's channel
+		this._setChargedEnergy(this.chargedEnergy);
 
-	        // Set the updated charged energy in the controller's channel
-	        this._setChargedEnergy(this.chargedEnergy);
-	    }
 	}
-
-
 
 	/**
 	 * Uses Info Log for further debug features.
 	 */
 	@Override
 	protected void logDebug(Logger log, String message) {
-		if (this.config.debugMode()) {
+		if (this.debugMode) {
 			this.logInfo(this.log, message);
 		}
 	}

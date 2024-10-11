@@ -1,7 +1,7 @@
 package io.openems.edge.controller.ess.chargedischargelimiter;
 
 import static io.openems.common.channel.PersistencePriority.HIGH;
-
+import static io.openems.common.channel.PersistencePriority.VERY_HIGH;
 
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
@@ -35,8 +35,8 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 
 				.unit(Unit.SECONDS).persistencePriority(HIGH)), //
 		CHARGED_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
+				.unit(Unit.CUMULATED_WATT_HOURS).persistencePriority(VERY_HIGH)), //
 
-				.unit(Unit.WATT_HOURS).persistencePriority(HIGH)), //
 		MIN_SOC(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.PERCENT)), //
 		MAX_SOC(Doc.of(OpenemsType.INTEGER) //
@@ -155,28 +155,27 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	}
 
 	/**
-	 * Internal method to set the 'nextValue' on
-	 * {@link ChannelId#CHARGED_ENERGY} Channel.
+	 * Internal method to set the 'nextValue' on {@link ChannelId#CHARGED_ENERGY}
+	 * Channel.
 	 *
 	 * @param value the next value
 	 */
 	public default void _setChargedEnergy(Integer value) {
 		this.getChargedEnergyChannel().setNextValue(value);
 	}
-	
+
 	/**
-	 * Internal method to set the 'nextValue' on
-	 * {@link ChannelId#CHARGED_ENERGY} Channel.
+	 * Internal method to set the 'nextValue' on {@link ChannelId#CHARGED_ENERGY}
+	 * Channel.
 	 *
 	 * @param value the next value
 	 */
 	public default void _setChargedEnergy(int value) {
 		this.getChargedEnergyChannel().setNextValue(value);
-	}	
+	}
 
 	/**
-	 * Gets the maximum SoC value configured. See
-	 * {@link ChannelId#CHARGED_ENERGY}.
+	 * ToDo {@link ChannelId#CHARGED_ENERGY}.
 	 *
 	 * @return the Channel {@link Value}
 	 */
@@ -222,7 +221,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getBalancingSoc() {
 		return this.getBalancingSocChannel().value();
 	}
-	
+
 	// Copied from Emergency Controller too get a grip on UI visulization
 	/**
 	 * Gets the Channel for {@link ChannelId#ACTUAL_RESERVE_SOC}.
@@ -252,7 +251,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getActualReserveSoc() {
 		return this.getActualReserveSocChannel().value();
 	}
-	
+
 	/**
 	 * Gets the Channel for {@link ChannelId#BALANCING_REMAINING_SECONDS}.
 	 *
@@ -282,7 +281,6 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 		return this.getBalancingRemainingSecondsChannel().value();
 	}
 
-
 	/**
 	 * Gets the Channel for {@link ChannelId#STATE_MACHINE}.
 	 *
@@ -310,6 +308,6 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	 */
 	public default void _setStateMachine(State value) {
 		this.getStateMachineChannel().setNextValue(value);
-	}	
+	}
 
 }

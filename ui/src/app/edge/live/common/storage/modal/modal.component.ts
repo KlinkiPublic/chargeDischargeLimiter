@@ -101,7 +101,6 @@ export class StorageModalComponent implements OnInit, OnDestroy {
                                 BALANCING_WANTED = 5,       // balancing procedure is desired
                                 BALANCING_ACTIVE = 6,       // balancing is active
                             }
-
                             const minSoc = currentData.channel[controller.id + "/_PropertyMinSoc"];
                             const maxSoc = currentData.channel[controller.id + "/_PropertyMaxSoc"];
                             const forceChargeSoc = currentData.channel[controller.id + "/_PropertyForceChargeSoc"];
@@ -112,6 +111,7 @@ export class StorageModalComponent implements OnInit, OnDestroy {
 
                             const isChargeDischargeLimiterEnabled = currentData.channel[controller.id + "/_PropertyIsChargeDischargeLimiterEnabled"] == 1;
                             const state = ChargeDischargeControllerState[stateNumber] ?? ChargeDischargeControllerState.UNDEFINED;
+                            //console.log("Current Data:", currentData);
 
                             controllerFrmGrp.addControl("chargeDischargeLimiterController",
                                 this.formBuilder.group({
