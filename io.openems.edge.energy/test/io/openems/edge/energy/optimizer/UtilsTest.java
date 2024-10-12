@@ -54,6 +54,7 @@ import io.openems.common.test.TimeLeapClock;
 import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.test.AbstractDummyOpenemsComponent;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
 import io.openems.edge.controller.ess.emergencycapacityreserve.ControllerEssEmergencyCapacityReserve;
 import io.openems.edge.controller.ess.limittotaldischarge.ControllerEssLimitTotalDischarge;
 import io.openems.edge.controller.ess.timeofusetariff.StateMachine;
@@ -228,14 +229,37 @@ public class UtilsTest {
 		}
 	}
 
+	private static class MyControllerChargeDischargeLimiter
+			extends AbstractDummyOpenemsComponent<MyControllerChargeDischargeLimiter>
+			implements ControllerChargeDischargeLimiter {
+
+		protected MyControllerChargeDischargeLimiter(Integer minSoc, Integer maxSoc) {
+			super("ctrl0", //
+					OpenemsComponent.ChannelId.values(), //
+					ControllerChargeDischargeLimiter.ChannelId.values() //
+			);
+			withValue(this.getMinSocChannel(), minSoc);
+			withValue(this.getMaxSocChannel(), maxSoc);
+		}
+
+		@Override
+		public void run() throws OpenemsNamedException {
+		}
+
+		@Override
+		protected MyControllerChargeDischargeLimiter self() {
+			return this;
+		}
+	}
+
 	@Test
 	public void testGetEssMinSocEnergy() {
 		var t1 = new MyControllerEssLimitTotalDischarge(50);
 		var t2 = new MyControllerEssLimitTotalDischarge(null);
 		var t3 = new MyControllerEssEmergencyCapacityReserve(30);
-		assertEquals(5000, getEssMinSocEnergy(
-				new TimeOfUseTariffControllerImpl.Context(List.of(t3), List.of(t1, t2), null, null, 10000, false),
-				10000));
+		var t4 = new MyControllerChargeDischargeLimiter(50, 88);
+		assertEquals(5000, getEssMinSocEnergy(new TimeOfUseTariffControllerImpl.Context(List.of(t4), List.of(t3),
+				List.of(t1, t2), null, null, 10000, false), 10000));
 	}
 
 	@Test

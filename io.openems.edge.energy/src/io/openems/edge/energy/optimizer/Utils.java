@@ -239,8 +239,8 @@ public final class Utils {
 	 */
 	protected static int getEssMinSocEnergy(TimeOfUseTariffControllerImpl.Context context, int essCapacity) {
 		return essCapacity /* [Wh] */ / 100 //
-				* getEssMinSocPercentage(//
-						context.ctrlLimitTotalDischarges(), //
+				* getEssUsableSocRange(//
+						context.ctrlChargeDischargeLimiters(), context.ctrlLimitTotalDischarges(), //
 						context.ctrlEmergencyCapacityReserves());
 	}
 
@@ -278,9 +278,11 @@ public final class Utils {
 	 *                                      {@link ControllerChargeDischargeLimiter}
 	 * @return the value in [%]
 	 */
-	public static int getEssUsableSocRange(List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
-			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves,
-			List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters) {
+	public static int getEssUsableSocRange(List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters,
+
+			List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
+
+			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves) {
 
 		int minDischargeSoc = ctrlLimitTotalDischarges.stream().map(ctrl -> ctrl.getMinSoc().get())
 				.filter(Objects::nonNull).mapToInt(v -> max(0, v)).max().orElse(0); // defaults to 0

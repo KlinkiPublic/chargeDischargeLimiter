@@ -31,6 +31,7 @@ import io.openems.edge.common.sum.Sum;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.ess.emergencycapacityreserve.ControllerEssEmergencyCapacityReserve;
 import io.openems.edge.controller.ess.limittotaldischarge.ControllerEssLimitTotalDischarge;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
 import io.openems.edge.controller.ess.timeofusetariff.TimeOfUseTariffControllerImpl.Context;
 import io.openems.edge.controller.ess.timeofusetariff.Utils.ApplyState;
 import io.openems.edge.energy.api.EnergySchedulable;
@@ -53,7 +54,9 @@ import io.openems.edge.timeofusetariff.api.TimeOfUseTariff;
 public class TimeOfUseTariffControllerImpl extends AbstractOpenemsComponent implements TimeOfUseTariffController,
 		EnergySchedulable<StateMachine, Context>, Controller, OpenemsComponent, TimedataProvider, ComponentJsonApi {
 
-	public static record Context(List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves,
+	public static record Context(
+			List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters, 
+			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves,
 			List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges, ManagedSymmetricEss ess,
 			ControlMode controlMode, int maxChargePowerFromGrid, boolean limitChargePowerFor14aEnWG) {
 	}
@@ -89,6 +92,11 @@ public class TimeOfUseTariffControllerImpl extends AbstractOpenemsComponent impl
 			cardinality = ReferenceCardinality.MULTIPLE, //
 			target = "(enabled=true)")
 	private List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges = new CopyOnWriteArrayList<>();
+	
+	@Reference(policyOption = ReferencePolicyOption.GREEDY, //
+			cardinality = ReferenceCardinality.MULTIPLE, //
+			target = "(enabled=true)")
+	private List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters = new CopyOnWriteArrayList<>();
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	private ManagedSymmetricEss ess;
@@ -106,7 +114,7 @@ public class TimeOfUseTariffControllerImpl extends AbstractOpenemsComponent impl
 		);
 		this.energyScheduleHandler = new EnergyScheduleHandler<>(//
 				() -> this.config.controlMode().states, //
-				() -> new Context(this.ctrlEmergencyCapacityReserves, this.ctrlLimitTotalDischarges, this.ess,
+				() -> new Context(this.ctrlChargeDischargeLimiters, this.ctrlEmergencyCapacityReserves, this.ctrlLimitTotalDischarges, this.ess,
 						this.config.controlMode(), this.config.maxChargePowerFromGrid(),
 						this.config.limitChargePowerFor14aEnWG()));
 	}
