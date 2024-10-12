@@ -1,3 +1,0 @@
-= chargedischargelimiter
-
-https://github.com/OpenEMS/openems/tree/develop/chargedischargelimiter[Source Code icon:github[]]

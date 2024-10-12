@@ -10,9 +10,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +23,7 @@ import io.openems.edge.controller.api.Controller;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Pwr;
-import io.openems.edge.timedata.api.Timedata;
-import io.openems.edge.timedata.api.TimedataProvider;
+
 
 @Designate(ocd = Config.class, factory = true)
 @Component(//
@@ -36,7 +32,7 @@ import io.openems.edge.timedata.api.TimedataProvider;
 		configurationPolicy = ConfigurationPolicy.REQUIRE //
 )
 public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsComponent
-		implements ControllerChargeDischargeLimiter, TimedataProvider, Controller, OpenemsComponent {
+		implements ControllerChargeDischargeLimiter, Controller, OpenemsComponent {
 
 	private final Logger log = LoggerFactory.getLogger(ControllerChargeDischargeLimiterImpl.class);
 
@@ -74,8 +70,7 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 	@Reference
 	private ConfigurationAdmin cm;
 
-	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
-	private volatile Timedata timedata = null;
+
 
 	private ManagedSymmetricEss ess;
 
@@ -345,11 +340,6 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			this._setAwaitingHysteresisValue(true);
 			return false;
 		}
-	}
-
-	@Override
-	public Timedata getTimedata() {
-		return this.timedata;
 	}
 
 	/**

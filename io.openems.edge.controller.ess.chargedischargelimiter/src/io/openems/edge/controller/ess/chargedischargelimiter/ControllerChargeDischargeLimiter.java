@@ -82,14 +82,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 		return this.channel(ChannelId.MIN_SOC);
 	}
 
-	/**
-	 * Gets the Channel for {@link ChannelId#MAX_SOC}.
-	 *
-	 * @return the Channel
-	 */
-	public default IntegerReadChannel getMaxSocChannel() {
-		return this.channel(ChannelId.MAX_SOC);
-	}
+
 
 	/**
 	 * Gets the Channel for {@link ChannelId#CHARGED_ENERGY}.
@@ -135,6 +128,15 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default Value<Integer> getMinSoc() {
 		return this.getMinSocChannel().value();
 	}
+	
+	/**
+	 * Gets the Channel for {@link ChannelId#MAX_SOC}.
+	 *
+	 * @return the Channel
+	 */
+	public default IntegerReadChannel getMaxSocChannel() {
+		return this.channel(ChannelId.MAX_SOC);
+	}
 
 	/**
 	 * Internal method to set the 'nextValue' on {@link ChannelId#MAX_SOC} Channel.
@@ -144,6 +146,7 @@ public interface ControllerChargeDischargeLimiter extends Controller, OpenemsCom
 	public default void _setMaxSoc(Integer value) {
 		this.getMaxSocChannel().setNextValue(value);
 	}
+
 
 	/**
 	 * Gets the maximum SoC value configured. See {@link ChannelId#MAX_SOC}.

@@ -1,6 +1,5 @@
 package io.openems.edge.energy.optimizer;
 
-import static com.google.common.collect.Streams.concat;
 import static io.openems.common.utils.DateUtils.roundDownToQuarter;
 import static io.openems.edge.common.type.TypeUtils.multiply;
 import static io.openems.edge.common.type.TypeUtils.orElse;
@@ -9,8 +8,10 @@ import static io.openems.edge.controller.ess.timeofusetariff.StateMachine.CHARGE
 import static io.openems.edge.controller.ess.timeofusetariff.StateMachine.DELAY_DISCHARGE;
 import static io.openems.edge.controller.ess.timeofusetariff.TimeOfUseTariffController.PERIODS_PER_HOUR;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.util.Arrays.stream;
+import static java.util.stream.IntStream.concat;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -47,6 +48,7 @@ import io.openems.edge.energy.optimizer.Simulator.Period;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.timedata.api.Timedata;
 import io.openems.edge.timeofusetariff.api.TimeOfUseTariff;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
 
 /**
  * Utils for {@link TimeOfUseTariffController}.
@@ -252,6 +254,67 @@ public final class Utils {
 	 * @return the value in [%]
 	 */
 	public static int getEssMinSocPercentage(List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
+			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves) {
+		return concat(//
+				ctrlLimitTotalDischarges.stream() //
+						.map(ctrl -> ctrl.getMinSoc().get()) //
+						.filter(Objects::nonNull) //
+						.mapToInt(v -> max(0, v)), // only positives
+				ctrlEmergencyCapacityReserves.stream() //
+						.map(ctrl -> ctrl.getActualReserveSoc().get()) //
+						.filter(Objects::nonNull) //
+						.mapToInt(v -> max(0, v))) // only positives
+				.max().orElse(0);
+	}
+
+	/**
+	 * Returns a range of useable SoC, e.g. min Soc:20, max SoC 95 -> range 75.
+	 * 
+	 * @param ctrlLimitTotalDischarges      the list of
+	 *                                      {@link ControllerEssLimitTotalDischarge}
+	 * @param ctrlEmergencyCapacityReserves the list of
+	 *                                      {@link ControllerEssEmergencyCapacityReserve}
+	 * @param ctrlChargeDischargeLimiter    the list of
+	 *                                      {@link ControllerChargeDischargeLimiter}
+	 * @return the value in [%]
+	 */
+	public static int getEssUsableSocRange(List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
+			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves,
+			List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters) {
+
+		int minDischargeSoc = ctrlLimitTotalDischarges.stream().map(ctrl -> ctrl.getMinSoc().get())
+				.filter(Objects::nonNull).mapToInt(v -> max(0, v)).max().orElse(0); // defaults to 0
+
+		int minReserveSoc = ctrlEmergencyCapacityReserves.stream().map(ctrl -> ctrl.getActualReserveSoc().get())
+				.filter(Objects::nonNull).mapToInt(v -> max(0, v)).max().orElse(0); //
+
+		int minLimiterSoc = ctrlChargeDischargeLimiters.stream().map(ctrl -> ctrl.getMinSoc().get())
+				.filter(Objects::nonNull).mapToInt(v -> max(0, v)).max().orElse(0); //
+
+		// take the max value for min Soc out of three controllers
+		int minSoc = max(minDischargeSoc, max(minReserveSoc, minLimiterSoc));
+
+		// get the max. SoC
+		int maxSoc = ctrlChargeDischargeLimiters.stream().map(ctrl -> ctrl.getMaxSoc().get()).filter(Objects::nonNull)
+				.mapToInt(v -> min(100, v)) // no values above 100%
+				.min().orElse(100); //
+
+		// compute useable SoC range
+		return max(0, maxSoc - minSoc); //
+	}
+
+	/**
+	 * Returns the range of allow SoC. I.e. min: 30%, max: 95% -> 65%.
+	 * 
+	 * @param ctrlLimitTotalDischarges      the list of
+	 *                                      {@link ControllerEssLimitTotalDischarge}
+	 * @param ctrlEmergencyCapacityReserves the list of
+	 *                                      {@link ControllerEssEmergencyCapacityReserve}
+	 * @param ctrlChargeDischargeLimiter    the list of
+	 *                                      {@link ControllerEssChargeDischargeLimiter}
+	 * @return the value in [%]
+	 */
+	public static int getEssSocRangePercentage(List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
 			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves) {
 		return concat(//
 				ctrlLimitTotalDischarges.stream() //
