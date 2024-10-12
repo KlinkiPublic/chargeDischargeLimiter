@@ -54,7 +54,7 @@ import io.openems.common.test.TimeLeapClock;
 import io.openems.common.types.ChannelAddress;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.test.AbstractDummyOpenemsComponent;
-import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerEssChargeDischargeLimiter;
 import io.openems.edge.controller.ess.emergencycapacityreserve.ControllerEssEmergencyCapacityReserve;
 import io.openems.edge.controller.ess.limittotaldischarge.ControllerEssLimitTotalDischarge;
 import io.openems.edge.controller.ess.timeofusetariff.StateMachine;
@@ -231,12 +231,12 @@ public class UtilsTest {
 
 	private static class MyControllerChargeDischargeLimiter
 			extends AbstractDummyOpenemsComponent<MyControllerChargeDischargeLimiter>
-			implements ControllerChargeDischargeLimiter {
+			implements ControllerEssChargeDischargeLimiter {
 
 		protected MyControllerChargeDischargeLimiter(Integer minSoc, Integer maxSoc) {
 			super("ctrl0", //
 					OpenemsComponent.ChannelId.values(), //
-					ControllerChargeDischargeLimiter.ChannelId.values() //
+					ControllerEssChargeDischargeLimiter.ChannelId.values() //
 			);
 			withValue(this.getMinSocChannel(), minSoc);
 			withValue(this.getMaxSocChannel(), maxSoc);

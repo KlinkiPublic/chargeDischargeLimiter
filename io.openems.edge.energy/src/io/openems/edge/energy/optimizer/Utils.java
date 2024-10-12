@@ -48,7 +48,7 @@ import io.openems.edge.energy.optimizer.Simulator.Period;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.timedata.api.Timedata;
 import io.openems.edge.timeofusetariff.api.TimeOfUseTariff;
-import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerEssChargeDischargeLimiter;
 
 /**
  * Utils for {@link TimeOfUseTariffController}.
@@ -271,14 +271,14 @@ public final class Utils {
 	 * Returns a range of useable SoC, e.g. min Soc:20, max SoC 95 -> range 75.
 	 * 
 	 * @param ctrlChargeDischargeLimiters   the list of
-	 *                                      {@link ControllerChargeDischargeLimiter}
+	 *                                      {@link ControllerEssChargeDischargeLimiter}
 	 * @param ctrlLimitTotalDischarges      the list of
 	 *                                      {@link ControllerEssLimitTotalDischarge}
 	 * @param ctrlEmergencyCapacityReserves the list of
 	 *                                      {@link ControllerEssEmergencyCapacityReserve}
 	 * @return the value in [%]
 	 */
-	public static int getEssUsableSocRange(List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters,
+	public static int getEssUsableSocRange(List<ControllerEssChargeDischargeLimiter> ctrlChargeDischargeLimiters,
 			List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
 			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves) {
 

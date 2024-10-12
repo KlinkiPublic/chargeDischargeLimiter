@@ -11,7 +11,7 @@ public class MyControllerTest {
 
 	@Test
 	public void test() throws Exception {
-		new ControllerTest(new ControllerChargeDischargeLimiterImpl()) //
+		new ControllerTest(new ControllerEssChargeDischargeLimiterImpl()) //
 				.activate(MyConfig.create() //
 						.setId(CTRL_ID) //
 						.build())

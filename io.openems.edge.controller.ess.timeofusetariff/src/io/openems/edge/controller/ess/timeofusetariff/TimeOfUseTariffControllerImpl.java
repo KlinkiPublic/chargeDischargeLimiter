@@ -31,7 +31,7 @@ import io.openems.edge.common.sum.Sum;
 import io.openems.edge.controller.api.Controller;
 import io.openems.edge.controller.ess.emergencycapacityreserve.ControllerEssEmergencyCapacityReserve;
 import io.openems.edge.controller.ess.limittotaldischarge.ControllerEssLimitTotalDischarge;
-import io.openems.edge.controller.ess.chargedischargelimiter.ControllerChargeDischargeLimiter;
+import io.openems.edge.controller.ess.chargedischargelimiter.ControllerEssChargeDischargeLimiter;
 import io.openems.edge.controller.ess.timeofusetariff.TimeOfUseTariffControllerImpl.Context;
 import io.openems.edge.controller.ess.timeofusetariff.Utils.ApplyState;
 import io.openems.edge.energy.api.EnergySchedulable;
@@ -55,7 +55,7 @@ public class TimeOfUseTariffControllerImpl extends AbstractOpenemsComponent impl
 		EnergySchedulable<StateMachine, Context>, Controller, OpenemsComponent, TimedataProvider, ComponentJsonApi {
 
 	public static record Context(
-			List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters, 
+			List<ControllerEssChargeDischargeLimiter> ctrlChargeDischargeLimiters, 
 			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves,
 			List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges, ManagedSymmetricEss ess,
 			ControlMode controlMode, int maxChargePowerFromGrid, boolean limitChargePowerFor14aEnWG) {
@@ -96,7 +96,7 @@ public class TimeOfUseTariffControllerImpl extends AbstractOpenemsComponent impl
 	@Reference(policyOption = ReferencePolicyOption.GREEDY, //
 			cardinality = ReferenceCardinality.MULTIPLE, //
 			target = "(enabled=true)")
-	private List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters = new CopyOnWriteArrayList<>();
+	private List<ControllerEssChargeDischargeLimiter> ctrlChargeDischargeLimiters = new CopyOnWriteArrayList<>();
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	private ManagedSymmetricEss ess;

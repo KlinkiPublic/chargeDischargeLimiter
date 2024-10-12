@@ -31,10 +31,10 @@ import io.openems.edge.ess.power.api.Pwr;
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE //
 )
-public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsComponent
-		implements ControllerChargeDischargeLimiter, Controller, OpenemsComponent {
+public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComponent
+		implements ControllerEssChargeDischargeLimiter, Controller, OpenemsComponent {
 
-	private final Logger log = LoggerFactory.getLogger(ControllerChargeDischargeLimiterImpl.class);
+	private final Logger log = LoggerFactory.getLogger(ControllerEssChargeDischargeLimiterImpl.class);
 
 	private Config config;
 
@@ -74,11 +74,11 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 	private ManagedSymmetricEss ess;
 
-	public ControllerChargeDischargeLimiterImpl() {
+	public ControllerEssChargeDischargeLimiterImpl() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Controller.ChannelId.values(), //
-				ControllerChargeDischargeLimiter.ChannelId.values() //
+				ControllerEssChargeDischargeLimiter.ChannelId.values() //
 		);
 	}
 
