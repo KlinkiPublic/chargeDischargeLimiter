@@ -3,6 +3,7 @@ package io.openems.edge.controller.ess.chargedischargelimiter;
 import java.time.Duration;
 import java.time.Instant;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -69,6 +70,9 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 
 	@Reference
 	private ComponentManager componentManager;
+	
+	@Reference
+	private ConfigurationAdmin cm;
 
 	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
 	private volatile Timedata timedata = null;
@@ -109,6 +113,10 @@ public class ControllerChargeDischargeLimiterImpl extends AbstractOpenemsCompone
 			
 			if (config.energyBetweenBalancingCycles() > 0) {
 				this.balancingWanted = true;
+			}
+			
+			if (OpenemsComponent.updateReferenceFilter(this.cm, this.servicePid(), "ess", config.ess_id())) {
+				return;
 			}
 
 		} catch (OpenemsNamedException e) {
