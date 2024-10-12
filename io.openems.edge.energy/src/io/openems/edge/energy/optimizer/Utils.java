@@ -270,18 +270,16 @@ public final class Utils {
 	/**
 	 * Returns a range of useable SoC, e.g. min Soc:20, max SoC 95 -> range 75.
 	 * 
+	 * @param ctrlChargeDischargeLimiters   the list of
+	 *                                      {@link ControllerChargeDischargeLimiter}
 	 * @param ctrlLimitTotalDischarges      the list of
 	 *                                      {@link ControllerEssLimitTotalDischarge}
 	 * @param ctrlEmergencyCapacityReserves the list of
 	 *                                      {@link ControllerEssEmergencyCapacityReserve}
-	 * @param ctrlChargeDischargeLimiter    the list of
-	 *                                      {@link ControllerChargeDischargeLimiter}
 	 * @return the value in [%]
 	 */
 	public static int getEssUsableSocRange(List<ControllerChargeDischargeLimiter> ctrlChargeDischargeLimiters,
-
 			List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
-
 			List<ControllerEssEmergencyCapacityReserve> ctrlEmergencyCapacityReserves) {
 
 		int minDischargeSoc = ctrlLimitTotalDischarges.stream().map(ctrl -> ctrl.getMinSoc().get())
@@ -312,8 +310,6 @@ public final class Utils {
 	 *                                      {@link ControllerEssLimitTotalDischarge}
 	 * @param ctrlEmergencyCapacityReserves the list of
 	 *                                      {@link ControllerEssEmergencyCapacityReserve}
-	 * @param ctrlChargeDischargeLimiter    the list of
-	 *                                      {@link ControllerEssChargeDischargeLimiter}
 	 * @return the value in [%]
 	 */
 	public static int getEssSocRangePercentage(List<ControllerEssLimitTotalDischarge> ctrlLimitTotalDischarges,
