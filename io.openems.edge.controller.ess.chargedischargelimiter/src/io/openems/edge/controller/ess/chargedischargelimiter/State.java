@@ -9,8 +9,7 @@ public enum State implements OptionsEnum {
 	BELOW_MIN_SOC(2, "Below configured Min-SoC"), //
 	ABOVE_MAX_SOC(3, "Above configured Max-SoC"), //
 	FORCE_CHARGE_ACTIVE(4, "Force-Charge-to-SoC"), // ESS is charging to configured balancing point
-	BALANCING_WANTED(5, "Balancing wanted"),
-	BALANCING_ACTIVE(6, "Balancing active");
+	BALANCING_WANTED(5, "Balancing wanted"), BALANCING_ACTIVE(6, "Balancing active");
 
 	private final int value;
 	private final String name;
