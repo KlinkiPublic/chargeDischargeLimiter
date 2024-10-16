@@ -52,7 +52,7 @@
     "zone.js": "~0.14.7"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.5",
+    "@angular-devkit/build-angular": "^18.2.8",
     "@angular-devkit/core": "18.2.5",
     "@angular-devkit/schematics": "18.2.5",
     "@angular-eslint/builder": "^18.3.1",
@@ -80,7 +80,8 @@
     "@typescript-eslint/parser": "^7.0.0",
     "@typescript-eslint/types": "^8.7.0",
     "eslint": "^8.57.0",
-    "eslint-plugin-import": "2.30.0",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-jsdoc": "50.2.4",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-unused-imports": "^4.1.4",
@@ -92,7 +93,7 @@
     "karma-coverage-istanbul-reporter": "~3.0.3",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "^2.1.0",
-    "protractor": "~7.0.0",
+    "protractor": "^7.0.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.4.5",
     "typescript-strict-plugin": "^2.4.4"
