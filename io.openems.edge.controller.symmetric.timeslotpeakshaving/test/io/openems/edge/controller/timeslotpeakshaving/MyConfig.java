@@ -146,7 +146,7 @@ public class MyConfig extends AbstractComponentConfig implements Config {
 	}
 
 	@Override
-	public String ess() {
+	public String ess_id() {
 		return this.builder.essId;
 	}
 

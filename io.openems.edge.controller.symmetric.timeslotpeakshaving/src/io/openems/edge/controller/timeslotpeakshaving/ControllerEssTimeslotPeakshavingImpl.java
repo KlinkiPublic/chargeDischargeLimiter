@@ -96,7 +96,7 @@ public class ControllerEssTimeslotPeakshavingImpl extends AbstractOpenemsCompone
 
 	@Override
 	public void run() throws OpenemsNamedException {
-		ManagedSymmetricEss ess = this.componentManager.getComponent(this.config.ess());
+		ManagedSymmetricEss ess = this.componentManager.getComponent(this.config.ess_id());
 		ElectricityMeter meter = this.componentManager.getComponent(this.config.meter_id());
 
 		var power = this.getPower(ess, meter);

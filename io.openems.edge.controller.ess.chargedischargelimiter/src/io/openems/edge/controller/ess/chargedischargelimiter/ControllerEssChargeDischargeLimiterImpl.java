@@ -1,7 +1,13 @@
 package io.openems.edge.controller.ess.chargedischargelimiter;
 
+import static java.lang.Math.max;
+import static java.util.stream.IntStream.concat;
+
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -20,11 +26,13 @@ import org.slf4j.LoggerFactory;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.types.ChannelAddress;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.controller.api.Controller;
 
+import io.openems.edge.controller.timeslotpeakshaving.ControllerEssTimeslotPeakshaving;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Pwr;
@@ -85,6 +93,16 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 
 	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.OPTIONAL)
 	private volatile Timedata timedata = null;
+	/*
+	 * @Reference(policy = ReferencePolicy.DYNAMIC, policyOption =
+	 * ReferencePolicyOption.GREEDY, // cardinality = ReferenceCardinality.OPTIONAL)
+	 * private volatile ControllerEssTimeslotPeakshaving ctrlPeakshaver = null;
+	 */
+
+    // Endgültige Liste für Peakshaver
+    private volatile List<ControllerEssTimeslotPeakshaving> ctrlPeakshavers = new CopyOnWriteArrayList<>();
+    // Temporäre Liste für Peakshaver, die vor der ESS-Initialisierung gebunden wurden
+    private final List<ControllerEssTimeslotPeakshaving> pendingPeakshavers = new CopyOnWriteArrayList<>();
 
 	public ControllerEssChargeDischargeLimiterImpl() {
 		super(//
@@ -113,6 +131,17 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 				this.balancingWanted = true;
 			}
 
+            // Initialisiere ESS zuerst
+            this.ess = this.componentManager.getComponent(config.ess_id());
+            this.logDebug(this.log, "ESS initialized with ID: " + this.ess.id());
+
+            // Verarbeite alle zwischengespeicherten Peakshaver
+            for (ControllerEssTimeslotPeakshaving peakshaver : this.pendingPeakshavers) {
+                bindControllerEssTimeslotPeakshaving(peakshaver);
+            }
+            this.pendingPeakshavers.clear();  // Leere die temporäre Liste
+
+
 			if (OpenemsComponent.updateReferenceFilter(this.cm, this.servicePid(), "ess", config.ess_id())) {
 				return;
 			}
@@ -132,6 +161,17 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 
 	@Override
 	public void run() throws OpenemsNamedException {
+		/*
+		 * if (this.ctrlPeakshaver != null) { // Log details about the referenced
+		 * peakshaver this.logDebug(this.log, "Referencing a Peakshaving controller: " +
+		 * this.ctrlPeakshaver.id());
+		 * 
+		 * // You can also log more details if the `ControllerEssTimeslotPeakshaving`
+		 * has relevant methods String state = this.ctrlPeakshaver.getState().name(); //
+		 * Assuming getState() method this.logDebug(this.log,
+		 * "Peakshaving Controller State: " + state); } else { this.logDebug(this.log,
+		 * "No Peakshaving controller is currently referenced."); }
+		 */
 		this.calculatedPower = null; // No constraints
 		switch (this.state) {
 		case UNDEFINED:
@@ -189,7 +229,7 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 			// Check if it has reached desired SOC
 
 			if (this.ess.getSoc() != null && this.ess.getSoc().get() > this.forceChargeSoc) { // Desired SOC reached,
-			 // stop charging
+				// stop charging
 				this.changeState(State.BALANCING_ACTIVE);
 			} else {
 				this.calculatedPower = this.forceChargePower * -1; // Charging has a negative value
@@ -339,33 +379,33 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 		}
 
 		try {
-			this.logDebug(this.log,">>>ChargeDischargeLimiter Contraints ");			
+			this.logDebug(this.log, ">>>ChargeDischargeLimiter Contraints ");
 			// adjust value so that it fits into Min/MaxActivePower
 			if (this.state == State.BELOW_MIN_SOC) { // block further discharging
-				
+
 				this.ess.setActivePowerLessOrEquals(calculatedPower);
-				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower +"W");						
+				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower + "W");
 			} else if (this.state == State.ABOVE_MAX_SOC) { // block further charging
-				
+
 				this.ess.setActivePowerGreaterOrEquals(calculatedPower);
-				this.logDebug(this.log, "setActivePowerGreaterOrEquals -> " + calculatedPower +"W");				
+				this.logDebug(this.log, "setActivePowerGreaterOrEquals -> " + calculatedPower + "W");
 			} else if (this.state == State.FORCE_CHARGE_ACTIVE) { // force charging
 				this.calculatedPower = this.ess.getPower().fitValueIntoMinMaxPower(this.id(), this.ess, Phase.ALL,
 						Pwr.ACTIVE, calculatedPower);
 				this.ess.setActivePowerLessOrEquals(calculatedPower);
-				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower +"W");				
+				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower + "W");
 			} else if (this.state == State.BALANCING_ACTIVE) { //
 				calculatedPower = this.ess.getPower().fitValueIntoMinMaxPower(this.id(), this.ess, Phase.ALL,
 						Pwr.ACTIVE, calculatedPower);
 				this.ess.setActivePowerLessOrEquals(calculatedPower);
-				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower +"W");				
+				this.logDebug(this.log, "setActivePowerLessOrEquals -> " + calculatedPower + "W");
 
 			}
 		} catch (OpenemsNamedException e) {
 			// ToDo catch exception. Add logging
 			e.printStackTrace();
 		}
-		this.logDebug(this.log,"\n");	
+		this.logDebug(this.log, "\n");
 	}
 
 	/**
@@ -437,5 +477,42 @@ public class ControllerEssChargeDischargeLimiterImpl extends AbstractOpenemsComp
 
 		return this.timedata;
 	}
+	
+    /*
+     * Dynamische Referenzierung von mehreren Peakshaver-Instanzen
+     */
+    @Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, //
+               cardinality = ReferenceCardinality.MULTIPLE, target = "(enabled=true)")
+    protected void bindControllerEssTimeslotPeakshaving(ControllerEssTimeslotPeakshaving peakshaver) {
+        this.logDebug(this.log, "Failed to bind Peakshaver due to missing ESS configuration or other issue: " );
+        if (this.ess == null) {
+            this.pendingPeakshavers.add(peakshaver);
+            this.logDebug(this.log, "Pending Peakshaver added for later processing: " + peakshaver.id());
+            return;
+        }
+	    try {
+	        // ESS-ID direkt aus der Konfiguration des Peakshavers lesen
+	        String peakshaverEssId = peakshaver.channel("_PropertyEssId").value().asString();
+
+	        // Check if the ESS ID matches the current ESS
+	        if (this.ess.id().equals(peakshaverEssId)) {
+	            this.ctrlPeakshavers.add(peakshaver);
+	            this.logDebug(this.log, "Added Peakshaver: " + peakshaver.id() + " for ESS: " + this.ess.id());
+	        } else {
+	            this.logDebug(this.log, "Ignored Peakshaver: " + peakshaver.id() + " (ESS mismatch)");
+	        }
+	    } catch (Exception e) {
+	        this.logDebug(this.log, "Failed to bind Peakshaver due to missing ESS configuration or other issue: " + e.getMessage());
+	    }
+    
+    }
+
+    protected void unbindControllerEssTimeslotPeakshaving(ControllerEssTimeslotPeakshaving peakshaver) {
+        this.pendingPeakshavers.remove(peakshaver);
+        this.logDebug(this.log, "Removed Peakshaver: " + peakshaver.id());
+    }
+
+
+
 
 }
