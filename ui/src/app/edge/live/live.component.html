@@ -102,12 +102,6 @@
                 <Controller_Io_Heatpump [componentId]="widget.componentId"></Controller_Io_Heatpump>
               </ion-col>
 
-              <ion-col *ngSwitchCase="'Controller.Symmetric.Threshold.PeakShaving'" size="12" size-lg="6"
-                class="ion-no-padding">
-                <Controller_Symmetric_Threshold_PeakShaving [componentId]="widget.componentId">
-                </Controller_Symmetric_Threshold_PeakShaving>
-              </ion-col>
-
               <ion-col *ngSwitchCase="'Controller.Symmetric.PeakShaving'" size="12" size-lg="6" class="ion-no-padding">
                 <Controller_Symmetric_PeakShaving [componentId]="widget.componentId"></Controller_Symmetric_PeakShaving>
               </ion-col>
@@ -120,6 +114,11 @@
               <ion-col *ngSwitchCase="'Controller.TimeslotPeakshaving'" size="12" size-lg="6" class="ion-no-padding">
                 <Controller_Symmetric_TimeSlot_PeakShaving [componentId]="widget.componentId">
                 </Controller_Symmetric_TimeSlot_PeakShaving>
+              </ion-col>
+
+              <ion-col *ngSwitchCase="'Controller.ThresholdPeakshaving'" size="12" size-lg="6" class="ion-no-padding">
+                <Controller_Symmetric_Threshold_PeakShaving [componentId]="widget.componentId">
+                </Controller_Symmetric_Threshold_PeakShaving>
               </ion-col>
 
               <ion-col *ngSwitchCase="'Controller.Ess.DelayedSellToGrid'" size="12" size-lg="6" class="ion-no-padding">
