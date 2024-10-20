@@ -1,7 +1,7 @@
-package io.openems.edge.controller.ess.chargedischargelimiter;
+package io.openems.edge.controller.symmetric.thresholdpeakshaver;
 
 import io.openems.common.test.AbstractComponentConfig;
-import io.openems.common.utils.ConfigUtils;
+import io.openems.edge.controller.symmetric.thresholdpeakshaver.Config;
 
 
 @SuppressWarnings("all")
@@ -52,37 +52,37 @@ public class MyConfig extends AbstractComponentConfig implements Config {
 	}
 
 	@Override
-	public int minSoc() {
+	public String meter_id() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int peakShavingPower() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public int maxSoc() {
+	public int rechargePower() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public int forceChargeSoc() {
+	public String ess_target() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int peakShavingThresholdPower() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public int energyBetweenBalancingCycles() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int forceChargePower() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int balancingHysteresis() {
+	public int hysteresisTime() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -91,18 +91,6 @@ public class MyConfig extends AbstractComponentConfig implements Config {
 	public boolean debugMode() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public boolean isChargeDischargeLimiterEnabled() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public String ess_target() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 //	@Override

@@ -1,8 +1,9 @@
 package io.openems.edge.controller.ess.chargedischargelimiter;
 
 import static io.openems.common.channel.PersistencePriority.HIGH;
-import static io.openems.common.channel.PersistencePriority.VERY_HIGH;
 
+
+import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
@@ -27,7 +28,9 @@ public interface ControllerEssChargeDischargeLimiter extends Controller, Openems
 		 * Holds the minimum SoC value configured.
 		 */
 		FORCE_CHARGE_POWER(Doc.of(OpenemsType.INTEGER) //
-				.unit(Unit.WATT).persistencePriority(HIGH)), // Priority high for testing
+				.unit(Unit.WATT)
+				.persistencePriority(HIGH)
+				.accessMode(AccessMode.READ_WRITE)), //), // Priority high for testing
 		BALANCING_SOC(Doc.of(OpenemsType.INTEGER) //
 
 				.unit(Unit.PERCENT).persistencePriority(HIGH)), //
@@ -35,7 +38,8 @@ public interface ControllerEssChargeDischargeLimiter extends Controller, Openems
 
 				.unit(Unit.SECONDS).persistencePriority(HIGH)), //
 		CHARGED_ENERGY(Doc.of(OpenemsType.INTEGER) // change name
-				.unit(Unit.CUMULATED_WATT_HOURS).persistencePriority(VERY_HIGH)), //
+				.unit(Unit.WATT_HOURS).persistencePriority(HIGH)
+),
 
 		MIN_SOC(Doc.of(OpenemsType.INTEGER) //
 				.unit(Unit.PERCENT)), //

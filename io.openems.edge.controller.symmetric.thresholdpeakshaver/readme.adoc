@@ -1,0 +1,43 @@
+= io.openems.edge.controller.symmetric.loadresponsivepeakshaver
+https://github.com/OpenEMS/openems/tree/develop/io.openems.edge.controller.symmetric.loadresponsivepeakshaver[Source Code icon:github[]]
+
+The Load Responsive Peak Shaving Controller is a software component designed to regulate the power usage of an energy storage system (ESS) to reduce grid demand peaks. It operates by dynamically adjusting the ESS's charge and discharge rates based on real-time grid power consumption. The controller plays a crucial role in optimizing energy costs, enhancing grid stability, and maintaining overall system efficiency.
+Key Functionalities:
+
+    Peak Shaving Activation: The controller monitors the total grid power, which is calculated as the sum of the grid's current active power (buy-from or sell-to) and the ESS's active power (charge or discharge). When the total grid power exceeds a predefined peak shaving threshold, the controller activates peak shaving mode. During this mode, the ESS discharges to reduce the grid load, thereby minimizing grid demand spikes.
+
+    Grid Power Calculation: The real-time grid power is calculated by summing the current power being bought from or sold to the grid (from a connected meter) and the ESS’s active power. This calculation allows the controller to determine the ESS's required response to mitigate grid load.
+
+    State Management with Hysteresis: The controller operates through a state machine, transitioning between different states based on system conditions. Key states include:
+        UNDEFINED: The initial state where system checks are performed.
+        STANDBY: The controller waits for grid power to exceed the peak shaving threshold.
+        PEAKSHAVING_ACTIVE: Activated when grid power exceeds the threshold, with the ESS discharging to shave the peak load.
+        ERROR: Triggered if environmental conditions such as grid disconnection or missing components (ESS, meter) are detected.
+
+    To prevent frequent oscillations between states, the controller uses a hysteresis mechanism. Once peak shaving is activated, the controller enforces a delay (configurable hysteresis time) before transitioning back to standby, ensuring stable operation.
+
+    Error Handling and Environment Checks: The controller continuously verifies that the operating environment is valid. It checks:
+        Grid Mode: The system must be in ON-GRID mode to function correctly. If the ESS enters OFF-GRID mode, the controller transitions to the ERROR state.
+        Component Availability: The controller ensures that both the ESS and the meter are available and properly initialized. If either is missing or fails during operation, the controller moves to the ERROR state.
+
+    Power Management: When peak shaving is active, the controller calculates the required discharge power by subtracting the peak shaving threshold from the current grid power. The ESS then adjusts its active power output to match the calculated discharge power, thus reducing the grid load. If grid power falls below a certain recharge threshold, the controller switches the ESS to recharge mode, charging the battery until the grid load stabilizes.
+
+    Reactive Power Management: In peak shaving mode, the controller sets the ESS’s reactive power to zero to prioritize active power adjustments. This ensures that the ESS focuses on addressing grid demand spikes during peak shaving operations.
+
+Workflow Summary:
+
+    The controller starts in UNDEFINED state and performs initial environment checks.
+    If conditions are valid (ON-GRID mode, ESS and meter available), it transitions to STANDBY.
+    When grid power exceeds the peak shaving threshold, the controller enters PEAKSHAVING_ACTIVE state and directs the ESS to discharge power.
+    After peak shaving is complete or the hysteresis period ends, the controller returns to STANDBY.
+    If at any point the environment becomes invalid (OFF-GRID mode, missing components), the controller moves to the ERROR state until the issue is resolved.
+
+Configuration Parameters:
+
+    Peak Shaving Threshold Power: The grid power level above which peak shaving is activated.
+    Peak Shaving Power: The maximum power the ESS will discharge during peak shaving.
+    Recharge Power: The grid power level below which the ESS will start recharging.
+    Hysteresis Time: The delay period to prevent rapid state changes, ensuring stable operation during peak shaving.
+
+This controller provides a sophisticated method for managing ESS power to reduce demand charges and optimize energy use while maintaining operational safety and reliability through its state management and error handling features.
+

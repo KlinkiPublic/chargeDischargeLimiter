@@ -1,16 +1,15 @@
-package io.openems.edge.controller.ess.chargedischargelimiter;
-
+package io.openems.edge.controller.symmetric.thresholdpeakshaver;
 import io.openems.common.types.OptionsEnum;
 
 public enum State implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	NORMAL(0, "Normal"), // SoC in range between min and max
+	STANDBY(0, "Peakshaver is inactive and waiting"), // SoC in range between min and max
 	ERROR(1, "Error State"), //
-	BELOW_MIN_SOC(2, "Below configured Min-SoC"), //
-	ABOVE_MAX_SOC(3, "Above configured Max-SoC"), //
-	FORCE_CHARGE_ACTIVE(4, "Force-Charge-to-SoC"), // ESS is charging to configured balancing point
-	BALANCING_WANTED(5, "Balancing wanted"),
-	BALANCING_ACTIVE(6, "Balancing active");
+	PEAKSHAVING_ACTIVE(2, "Active Peak Shaving"), //
+	CHARGING_ACTIVE(3, "No Active Peak Shaving Since Hysteresis Start"),
+	HYSTERESIS_ACTIVE(4, "Waiting. No Active Peak Shaving Since Hysteresis Start"),
+	GRID_POWER_ABOVE_LIMIT(5, "No Active Peak Shaving Since Hysteresis Start");
+
 
 	private final int value;
 	private final String name;
