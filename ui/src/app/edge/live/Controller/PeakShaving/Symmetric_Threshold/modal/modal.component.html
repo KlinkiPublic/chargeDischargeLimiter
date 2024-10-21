@@ -14,6 +14,7 @@
 <ion-content>
     <ng-container *ngIf="!loading">
 
+
         <ion-item [color]="getBackgroundClass(currentState)">
             <ion-label>
                 <oe-modal-line [name]="'Edge.Index.Widgets.Peakshaving.currentPeakShavingState' | translate"
@@ -21,7 +22,6 @@
                 </oe-modal-line>
             </ion-label>
         </ion-item>
-
 
         <ion-card-content class="underline" *ngIf="(edge.currentData | async)['channel'] as currentData">
             <ng-container *ngIf="component.properties['meter.id'] as meterId">

@@ -89,7 +89,7 @@ export class Controller_Symmetric_Threshold_PeakShavingModalComponent implements
         const currentStateValue = currentData.channel[`${controllerId}/PeakShavingStateMachine`];
 
         // Debugging the fetched state value
-        console.log(`Fetched state from ${controllerId}/PeakShavingStateMachine:`, currentStateValue);
+        //console.log(`Fetched state from ${controllerId}/PeakShavingStateMachine:`, currentStateValue);
 
         // Check if currentStateValue is not undefined or null and is a valid number
         if (currentStateValue === undefined || currentStateValue === null || isNaN(currentStateValue)) {
@@ -98,26 +98,29 @@ export class Controller_Symmetric_Threshold_PeakShavingModalComponent implements
         } else {
             // Ensure currentStateValue is a valid enum value (number) before casting
             this.currentState = PeakShavingState[currentStateValue as keyof typeof PeakShavingState] ?? PeakShavingState.UNDEFINED;
-            console.log("Mapped currentState:", this.currentState);
+            //console.log("Mapped currentState:", this.currentState);
         }
     }
 
-    getBackgroundClass(state: PeakShavingState): string {
+    getBackgroundClass(state: string): string {
+
         switch (state) {
-            case PeakShavingState.UNDEFINED:
-                return "light"; // Neutral or undefined state
-            case PeakShavingState.IDLE:
+            case 'UNDEFINED':
+                return "danger"; // Neutral or undefined state
+            case 'IDLE':
                 return "success"; // Green for idle or ready
-            case PeakShavingState.ERROR:
+            case 'ERROR':
                 return "danger"; // Red for errors
-            case PeakShavingState.DISABLED:
+            case 'DISABLED':
                 return "medium"; // Grey for disabled
-            case PeakShavingState.ACTIVE:
-                return "primary"; // Blue for active state
-            case PeakShavingState.CHARGING:
+            case 'ACTIVE':
+                return "warning"; // Blue for active state
+            case 'CHARGING':
                 return "warning"; // Orange for charging
-            case PeakShavingState.HYSTERESIS_ACTIVE:
+            case 'HYSTERESIS_ACTIVE':
                 return "tertiary"; // Different color for hysteresis active
+            default:
+                return "default"; // Optional fallback if state doesn't match
         }
     }
 
