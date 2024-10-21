@@ -58,6 +58,7 @@ public class ControllerEssThresholdPeakshaverImpl extends AbstractOpenemsCompone
 	private Instant lastStateChangeTime = Instant.MIN;
 
 	private Instant peakshavingStartTime = Instant.MIN;
+	private int toleranceActivePower = 2000; // used for checking if ESS is doing what it should
 
 	public ControllerEssThresholdPeakshaverImpl() {
 		super(//
@@ -107,8 +108,6 @@ public class ControllerEssThresholdPeakshaverImpl extends AbstractOpenemsCompone
 
 		int calculatedPower;
 
-
-
 		switch (this.state) {
 		case UNDEFINED:
 			if (this.checkEnvironment() == false) {
@@ -156,11 +155,22 @@ public class ControllerEssThresholdPeakshaverImpl extends AbstractOpenemsCompone
 				// if peakshaving is active, save "shaved" power
 				if (calculatedPower > 0) {
 					this._setPeakShavedGridPower(calculatedPower);
-				} 
-					
-				this.logDebug(this.log, "Peakshaver: Battery Discharging");
+				}
 
-				this.changePeakshavingState(PeakshavingState.ACTIVE);
+				/**
+				 * calculated: 999 (battery discharging) ESS: 0 ( i.e. battery empty) tolerance:
+				 * 1000 -> calculated + tolerance = -1 (Error state)
+				 */
+				if (this.ess.getActivePower().get() < (calculatedPower - this.toleranceActivePower)) {
+					this.changePeakshavingState(PeakshavingState.ERROR);
+					this.logDebug(this.log,
+							"ERROR: Peakshaver not working. Battery Empty?? ESS Power "
+									+ this.ess.getActivePower().get() + " Calculated Power: " + calculatedPower
+									+ " Tolerance: " + this.toleranceActivePower);
+				} else {
+					this.changePeakshavingState(PeakshavingState.ACTIVE);
+					this.logDebug(this.log, "Peakshaver: Battery Discharging");
+				}
 
 			} else if (gridPower <= this.config.rechargePower()) {
 				/*
@@ -169,7 +179,7 @@ public class ControllerEssThresholdPeakshaverImpl extends AbstractOpenemsCompone
 				calculatedPower = gridPower -= this.config.rechargePower();
 				this.logDebug(this.log, "Peakshaver: Battery Charging");
 				this.changePeakshavingState(PeakshavingState.CHARGING);
-				this._setPeakShavedGridPower(0);
+				this._setPeakShavedGridPower(0); // for UI
 
 			} else {
 				/*
