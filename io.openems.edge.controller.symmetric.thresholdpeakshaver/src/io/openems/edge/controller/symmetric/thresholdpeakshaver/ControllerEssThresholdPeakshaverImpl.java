@@ -135,6 +135,8 @@ public class ControllerEssThresholdPeakshaverImpl extends AbstractOpenemsCompone
 				// Peakshaving starts above threshold
 				// Remember: In peak shaving mode the battery can be charged
 				this.changeState(State.PEAKSHAVING_ACTIVE);
+			} else {
+				this.changePeakshavingState(PeakshavingState.DISABLED);
 			}
 			break;
 		case PEAKSHAVING_ACTIVE:
