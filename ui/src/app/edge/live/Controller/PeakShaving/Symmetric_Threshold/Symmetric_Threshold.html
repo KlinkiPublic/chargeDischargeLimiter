@@ -1,8 +1,8 @@
 <oe-flat-widget button (click)="presentModal()" [title]="component.alias" [icon]="{name: 'trending-down-outline'}">
-    <oe-flat-widget-line [name]="'General.grid'| translate" [converter]="CONVERT_WATT_TO_KILOWATT"
-        [value]="activePower">
+    <oe-flat-widget-line [name]="'Edge.Index.Widgets.Peakshaving.gridConsumption'| translate"
+        [converter]="CONVERT_WATT_TO_KILOWATT" [value]="activePower">
     </oe-flat-widget-line>
-    <oe-flat-widget-line [name]="'Edge.Index.Widgets.Peakshaving.gridPowerWithoutEss'| translate"
+    <oe-flat-widget-line [name]="'Edge.Index.Widgets.Peakshaving.gridConsumptionWithoutEss'| translate"
         [converter]="CONVERT_WATT_TO_KILOWATT" [value]="gridPowerWithoutPeakShaving">
     </oe-flat-widget-line>
     <oe-flat-widget-line [name]="'Edge.Index.Widgets.Peakshaving.peakshaving'| translate"
