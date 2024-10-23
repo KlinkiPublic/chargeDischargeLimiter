@@ -70,7 +70,7 @@
           "endDate": "End Datum",
           "endTime": "Endzeit",
           "mostStressedPhase": "Meist belastete Phase",
-          "peakshaving": "Gekappt",
+          "peakshaving": "Ziel Spitzenlast-Kappung",
           "gridPowerWithoutEss": "Netz (ohne ESS)",
           "peakshavingPower": "Entladung über",
           "recharge": "Beladeleistung",
